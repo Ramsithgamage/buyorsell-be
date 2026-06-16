@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity('guest_sessions')
@@ -19,6 +20,7 @@ export class GuestSession {
   @Column({
     name: 'expires_at',
   })
+  @Index()
   expiresAt!: Date;
 
   @CreateDateColumn({

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class GuestTokenGuard
@@ -13,6 +14,7 @@ export class GuestTokenGuard
 {
   constructor(
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async canActivate(
@@ -26,7 +28,7 @@ export class GuestTokenGuard
 
     if (!authHeader) {
       throw new UnauthorizedException(
-        'Guest token required',
+        'Missing authorization header',
       );
     }
 
@@ -39,7 +41,9 @@ export class GuestTokenGuard
           token,
           {
             secret:
-              process.env.GUEST_TOKEN_SECRET,
+              this.configService.get(
+                'GUEST_TOKEN_SECRET',
+              ),
           },
         );
 

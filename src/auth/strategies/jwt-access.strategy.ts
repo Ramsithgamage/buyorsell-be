@@ -4,6 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(
@@ -26,7 +27,13 @@ export class JwtAccessStrategy extends PassportStrategy(
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload): Promise<JwtPayload> {
+    if (!payload.sub || !payload.email) {
+      throw new Error('Invalid JWT payload');
+    }
+    if (payload.type === 'guest') {
+      throw new Error('Guest token cannot be used for authenticated access');
+    }
     return payload;
   }
 }

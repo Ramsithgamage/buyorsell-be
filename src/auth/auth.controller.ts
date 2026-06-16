@@ -7,6 +7,7 @@ import {
   Query,
   Request,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -24,6 +25,7 @@ export class AuthController {
   ) {}
 
 @Get('verify')
+@Throttle({default: {limit: 5, ttl: 3600}})
 verifyEmail(
   @Query('token')
   token: string,
@@ -35,6 +37,7 @@ verifyEmail(
 
 @Post('register')
 @UseGuards(GuestTokenGuard)
+@Throttle({default: {limit: 5, ttl: 3600}})
 register(
   @Body()
   createUserDto: CreateUserDto,
@@ -46,6 +49,7 @@ register(
 
   @Post('login')
   @UseGuards(GuestTokenGuard)
+  @Throttle({default: {limit: 5, ttl: 3600}})
   login(
     @Body()
     loginDto: LoginDto,
@@ -56,6 +60,7 @@ register(
   }
 
   @Post('refresh_token')
+  @Throttle({default: {limit: 10, ttl: 3600}})
   refreshToken(
     @Body()
     dto: RefreshTokenDto,

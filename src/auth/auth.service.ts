@@ -74,24 +74,33 @@ constructor(
       expiresAt,
     );
 
+  const verificationUrlBase =
+    this.configService.get(
+      'VERIFICATION_URL_BASE',
+    );
+
   const verificationUrl =
-    `http://localhost:3000/auth/verify?token=${verificationToken}`;
+    `${verificationUrlBase}/auth/verify?token=${verificationToken}`;
 
-  console.log(
-    '\n==================================',
-  );
+  if (
+    this.configService.get('NODE_ENV') === 'development'
+  ) {
+    console.log(
+      '\n==================================',
+    );
 
-  console.log(
-    'EMAIL VERIFICATION LINK:',
-  );
+    console.log(
+      'EMAIL VERIFICATION LINK:',
+    );
 
-  console.log(
-    verificationUrl,
-  );
+    console.log(
+      verificationUrl,
+    );
 
-  console.log(
-    '==================================\n',
-  );
+    console.log(
+      '==================================\n',
+    );
+  }
 
   return {
     message:
@@ -351,11 +360,6 @@ constructor(
   async logout(
     userId: number,
   ) {
-    await this.usersService.updateStatus(
-      userId,
-      0,
-    );
-
     await this.usersService.updateRefreshToken(
       userId,
       null,

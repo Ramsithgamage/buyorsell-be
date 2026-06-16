@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 import { User } from '../../users/entities/user.entity';
@@ -13,12 +14,17 @@ export class VerificationToken {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
+  @Column({
+    unique: true,
+    length: 64,
+  })
+  @Index()
   token!: string;
 
   @Column({
     name: 'expires_at',
   })
+  @Index()
   expiresAt!: Date;
 
   @ManyToOne(

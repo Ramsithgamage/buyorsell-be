@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, LessThan } from 'typeorm';
 import { GuestSession } from './entities/guest-session.entity';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class GuestSessionService {
@@ -26,10 +27,28 @@ export class GuestSessionService {
   async findByGuestId(
     guestId: string,
   ) {
-    return this.guestRepository.findOne({
-      where: {
-        guestId,
-      },
+    const session =
+      await this.guestRepository.findOne({
+        where: {
+          guestId,
+        },
+      });
+
+    if (!session) {
+      return null;
+    }
+
+    if (session.expiresAt < new Date()) {
+      return null;
+    }
+
+    return session;
+  }
+
+  @Cron('0 * * * *')
+  async deleteExpiredGuestSessions() {
+    await this.guestRepository.delete({
+      expiresAt: LessThan(new Date()),
     });
   }
 }
