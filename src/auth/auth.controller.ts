@@ -13,6 +13,8 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { GuestTokenGuard } from './guards/guest-token.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LogoutDto } from './dto/logout.dto';
@@ -60,14 +62,18 @@ register(
   }
 
   @Post('refresh_token')
+  @UseGuards(JwtRefreshGuard)
   @Throttle({default: {limit: 10, ttl: 3600}})
   refreshToken(
+    @CurrentUser()
+    user: any,
     @Body()
     dto: RefreshTokenDto,
   ) {
     return this.authService
       .refreshToken(
-        dto.refreshToken,
+        user.id,
+        user.email,
       );
   }
 

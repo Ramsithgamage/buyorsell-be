@@ -1,7 +1,9 @@
-import { Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AppService } from './app.service';
 import { AuthService } from './auth/auth.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { CurrentUser } from './auth/decorators/current-user.decorator';
+import type { JwtPayload } from './auth/interfaces/jwt-payload.interface';
 
 @Controller() 
 export class AppController {
@@ -19,7 +21,7 @@ export class AppController {
   // Resolves to: GET localhost:3000/profile
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  profile(@Request() req) {
-    return req.user;
+  profile(@CurrentUser() user: JwtPayload) {
+    return user;
   }
 }

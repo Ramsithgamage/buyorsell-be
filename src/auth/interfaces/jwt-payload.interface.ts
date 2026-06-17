@@ -1,5 +1,6 @@
 export interface JwtPayload {
-  type: string;
-  sub: number;
-  email: string;
+  sub?: number;
+  email?: string;
+  guestId?: string;
+  type: 'guest' | 'access' | 'refresh';
 }

@@ -9,6 +9,10 @@ import { VerificationModule } from '../verification/verification.module';
 import { GuestTokenGuard } from './guards/guest-token.guard';
 import { PassportModule } from '@nestjs/passport';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
+import { JwtGuestStrategy } from './strategies/jwt-guest.strategy';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { TokenService } from './services/token.service';
 
 @Module({
   imports: [
@@ -21,10 +25,15 @@ import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
   ],
 
   controllers: [AuthController],
-  providers: [AuthService,
+  providers: [
+    AuthService,
+    TokenService,
     GuestTokenGuard,
     JwtAccessStrategy,
+    JwtGuestStrategy,
+    JwtRefreshStrategy,
+    JwtRefreshGuard,
   ],
-  exports: [AuthService],
+  exports: [AuthService, TokenService],
 })
 export class AuthModule {}
