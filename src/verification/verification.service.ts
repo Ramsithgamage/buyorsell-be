@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { VerificationToken } from './entities/verification-token.entity';
-import { BadRequestException,} from '@nestjs/common';
+import { InvalidTokenException, TokenExpiredException } from '../common/exceptions';
 
 @Injectable()
 export class VerificationService {
@@ -51,7 +51,7 @@ export class VerificationService {
       await this.findByToken(token);
 
     if (!verificationToken) {
-      throw new BadRequestException(
+      throw new InvalidTokenException(
         'Invalid verification token',
       );
     }
@@ -61,9 +61,7 @@ export class VerificationService {
     if (
       verificationToken.expiresAt < now
     ) {
-      throw new BadRequestException(
-        'Verification token expired',
-      );
+      throw new TokenExpiredException();
     }
 
     await this.usersService.updateStatus(

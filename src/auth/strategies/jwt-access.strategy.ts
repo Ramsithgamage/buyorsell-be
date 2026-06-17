@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -29,10 +29,10 @@ export class JwtAccessStrategy extends PassportStrategy(
 
   async validate(payload: JwtPayload): Promise<JwtPayload> {
     if (!payload.sub || !payload.email) {
-      throw new Error('Invalid JWT payload');
+      throw new UnauthorizedException('Invalid JWT payload');
     }
     if (payload.type === 'guest') {
-      throw new Error('Guest token cannot be used for authenticated access');
+      throw new UnauthorizedException('Guest token cannot be used for authenticated access');
     }
     return payload;
   }

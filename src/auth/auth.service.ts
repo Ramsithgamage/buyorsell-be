@@ -13,6 +13,13 @@ import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import { VerificationService } from 'src/verification/verification.service';
 import { LoginDto } from './dto/login.dto';
+import {
+  DuplicateEmailException,
+  InvalidTokenException,
+  UserNotFoundException,
+  InvalidCredentialsException,
+  EmailNotVerifiedException,
+} from '../common/exceptions';
 
 @Injectable()
 export class AuthService {
@@ -34,9 +41,7 @@ constructor(
     );
 
   if (existingUser) {
-    throw new BadRequestException(
-      'Email already exists',
-    );
+    throw new DuplicateEmailException();
   }
 
   const hashedPassword =
@@ -215,7 +220,7 @@ constructor(
           },
         );
     } catch {
-      throw new BadRequestException(
+      throw new InvalidTokenException(
         'Invalid refresh token',
       );
     }
@@ -226,13 +231,11 @@ constructor(
       );
 
     if (!user) {
-      throw new BadRequestException(
-        'User not found',
-      );
+      throw new UserNotFoundException();
     }
 
     if (!user.refreshToken) {
-      throw new BadRequestException(
+      throw new InvalidTokenException(
         'Invalid refresh token',
       );
     }
@@ -244,7 +247,7 @@ constructor(
       );
 
     if (!tokenMatches) {
-      throw new BadRequestException(
+      throw new InvalidTokenException(
         'Invalid refresh token',
       );
     }
@@ -291,9 +294,7 @@ constructor(
       );
 
     if (!user) {
-      throw new BadRequestException(
-        'Invalid credentials',
-      );
+      throw new InvalidCredentialsException();
     }
 
     const passwordMatches =
@@ -303,15 +304,11 @@ constructor(
       );
 
     if (!passwordMatches) {
-      throw new BadRequestException(
-        'Invalid credentials',
-      );
+      throw new InvalidCredentialsException();
     }
 
     if (user.status !== 1) {
-      throw new BadRequestException(
-        'Email not verified',
-      );
+      throw new EmailNotVerifiedException();
     }
 
     const accessToken =
