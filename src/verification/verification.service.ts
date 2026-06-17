@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { VerificationToken } from './entities/verification-token.entity';
 import { InvalidTokenException, TokenExpiredException } from '../common/exceptions';
+import { UserStatus } from '../common/enums/user-status.enum';
 
 @Injectable()
 export class VerificationService {
@@ -66,7 +67,7 @@ export class VerificationService {
 
     await this.usersService.updateStatus(
       verificationToken.user.id,
-      1,
+      UserStatus.VERIFIED,
     );
 
     await this.deleteToken(

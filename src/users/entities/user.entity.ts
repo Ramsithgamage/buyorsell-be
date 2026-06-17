@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
+import { UserStatus } from '../../common/enums/user-status.enum';
 
 @Entity('users')
 export class User {
@@ -13,16 +15,20 @@ export class User {
 
   @Column({
     name: 'first_name',
+    length: 50,
   })
   firstName!: string;
 
   @Column({
     name: 'last_name',
+    length: 50,
   })
   lastName!: string;
 
+  @Index({ unique: true })
   @Column({
     unique: true,
+    length: 255,
   })
   email!: string;
 
@@ -30,13 +36,15 @@ export class User {
   password!: string;
 
   @Column({
-    default: 0,
+    type: 'tinyint',
+    default: UserStatus.UNVERIFIED,
   })
-  status!: number;
+  status!: UserStatus;
 
   @Column({
     name: 'refresh_token',
     nullable: true,
+    length: 255,
   })
   refreshToken?: string;
 

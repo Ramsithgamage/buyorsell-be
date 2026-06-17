@@ -11,9 +11,11 @@ export class GuestSession {
   @PrimaryGeneratedColumn()
   id!: number;
 
+  @Index({ unique: true })
   @Column({
     unique: true,
     name: 'guest_id',
+    length: 36,
   })
   guestId!: string;
 

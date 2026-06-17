@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { User } from './entities/user.entity';
+import { UserStatus } from '../common/enums/user-status.enum';
 
 @Injectable()
 export class UsersService {
@@ -36,7 +37,7 @@ export class UsersService {
 
   async updateStatus(
     userId: number,
-    status: number,
+    status: UserStatus,
   ) {
     await this.userRepository.update(
       userId,

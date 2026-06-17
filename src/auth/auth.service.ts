@@ -12,6 +12,7 @@ import * as crypto from 'crypto';
 import { VerificationService } from 'src/verification/verification.service';
 import { LoginDto } from './dto/login.dto';
 import { TokenService } from './services/token.service';
+import { UserStatus } from '../common/enums/user-status.enum';
 import {
   DuplicateEmailException,
   InvalidTokenException,
@@ -58,7 +59,7 @@ constructor(
       email:
         createUserDto.email,
       password: hashedPassword,
-      status: 0,
+      status: UserStatus.UNVERIFIED,
     });
 
   const verificationToken =
@@ -194,7 +195,7 @@ constructor(
       throw new InvalidCredentialsException();
     }
 
-    if (user.status !== 1) {
+    if (user.status !== UserStatus.VERIFIED) {
       throw new EmailNotVerifiedException();
     }
 
