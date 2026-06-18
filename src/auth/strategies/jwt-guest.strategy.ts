@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { GuestSessionService } from '../../guest-session/guest-session.service';
 
 @Injectable()
 export class JwtGuestStrategy extends PassportStrategy(
@@ -11,6 +12,7 @@ export class JwtGuestStrategy extends PassportStrategy(
 ) {
   constructor(
     private readonly configService: ConfigService,
+    private readonly guestSessionService: GuestSessionService,
   ) {
     super({
       jwtFromRequest:
@@ -28,6 +30,12 @@ export class JwtGuestStrategy extends PassportStrategy(
     if (payload.type !== 'guest') {
       throw new UnauthorizedException('Guest token is required');
     }
+
+    const session = await this.guestSessionService.findByGuestId(payload.guestId);
+    if (!session) {
+      throw new UnauthorizedException('Guest session has expired or is invalid');
+    }
+
     return payload;
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
@@ -24,6 +24,9 @@ export class VerificationService {
     user: any,
     expiresAt: Date,
   ) {
+    // Delete any existing verification tokens for the user to prevent duplicates
+    await this.verificationRepository.delete({ user: { id: user.id } });
+
     const verificationToken =
       this.verificationRepository.create({
         token,
@@ -54,6 +57,19 @@ export class VerificationService {
     if (!verificationToken) {
       throw new InvalidTokenException(
         'Invalid verification token',
+      );
+    }
+
+    if (!verificationToken.user) {
+      throw new BadRequestException(
+        'User associated with this token not found',
+      );
+    }
+
+    if (verificationToken.user.status === UserStatus.VERIFIED) {
+      await this.deleteToken(verificationToken.id);
+      throw new BadRequestException(
+        'Email is already verified',
       );
     }
 
