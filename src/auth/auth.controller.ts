@@ -5,7 +5,6 @@ import {
   Get,
   UseGuards,
   Query,
-  Request,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
@@ -84,11 +83,14 @@ export class AuthController {
     type: ErrorResponseDto,
     description: 'Missing or invalid guest token',
   })
-  register(
+  async register(
     @Body()
     createUserDto: CreateUserDto,
-  ) {
-    return this.authService.register(createUserDto);
+  ): Promise<RegisterResponseDto> {
+    const result = await this.authService.register(createUserDto);
+    const response = new RegisterResponseDto();
+    response.message = result.message;
+    return response;
   }
 
   @Post('login')
@@ -112,11 +114,21 @@ export class AuthController {
     type: ErrorResponseDto,
     description: 'Invalid credentials, or missing/invalid guest token',
   })
-  login(
+  async login(
     @Body()
     loginDto: LoginDto,
-  ) {
-    return this.authService.login(loginDto);
+  ): Promise<LoginResponseDto> {
+    const result = await this.authService.login(loginDto);
+    const response = new LoginResponseDto();
+    response.accessToken = result.accessToken;
+    response.refreshToken = result.refreshToken;
+    response.user = {
+      id: result.user.id,
+      firstName: result.user.firstName,
+      lastName: result.user.lastName,
+      email: result.user.email,
+    };
+    return response;
   }
 
   @Post('refresh_token')
@@ -139,13 +151,17 @@ export class AuthController {
     type: ErrorResponseDto,
     description: 'Invalid, revoked, or expired refresh token',
   })
-  refreshToken(
+  async refreshToken(
     @CurrentUser()
     user: any,
     @Body()
     dto: RefreshTokenDto,
-  ) {
-    return this.authService.refreshToken(user.id, user.email);
+  ): Promise<RefreshTokenResponseDto> {
+    const result = await this.authService.refreshToken(user.id, user.email);
+    const response = new RefreshTokenResponseDto();
+    response.accessToken = result.accessToken;
+    response.refreshToken = result.refreshToken;
+    return response;
   }
 
   @Post('logout')
@@ -165,9 +181,9 @@ export class AuthController {
     description: 'Missing or invalid JWT access token',
   })
   logout(
-    @Request()
-    req: any,
+    @CurrentUser()
+    user: any,
   ) {
-    return this.authService.logout(req.user.sub);
+    return this.authService.logout(user.sub);
   }
 }

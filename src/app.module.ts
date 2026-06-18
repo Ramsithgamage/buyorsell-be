@@ -23,12 +23,16 @@ import { validationSchema } from './config/configuration';
 
     ScheduleModule.forRoot(),
 
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60,
-        limit: 10,
-      },
-    ]),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => [
+        {
+          ttl: configService.get<number>('THROTTLER_TTL') || 60,
+          limit: configService.get<number>('THROTTLER_LIMIT') || 10,
+        },
+      ],
+    }),
 
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
