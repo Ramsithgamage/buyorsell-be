@@ -24,6 +24,11 @@ export class AppController {
     private readonly usersService: UsersService,
   ) {}
 
+  @Get()
+  getHello(): string {
+    return this.appService.getHello();
+  }
+
   @Post('get_token')
   @ApiOperation({ summary: 'Generate a new Guest JWT token' })
   @ApiResponse({
