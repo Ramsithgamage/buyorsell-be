@@ -10,6 +10,7 @@ import { GuestSessionModule } from './guest-session/guest-session.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { validationSchema } from './config/configuration';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -53,8 +54,9 @@ import { validationSchema } from './config/configuration';
     UsersModule,
     VerificationModule,
     GuestSessionModule,
+    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
