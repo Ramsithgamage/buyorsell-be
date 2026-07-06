@@ -1,0 +1,130 @@
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import slugify from 'slugify';
+import { Advertisement } from './entities/advertisement.entity';
+import { CreateAdDto } from './dto/create-ad.dto';
+import { UpdateAdDto } from './dto/update-ad.dto';
+import { CategoriesService } from '../categories/categories.service';
+
+@Injectable()
+export class AdvertisementsService {
+  constructor(
+    @InjectRepository(Advertisement)
+    private readonly adRepository: Repository<Advertisement>,
+    private readonly categoriesService: CategoriesService,
+  ) {}
+
+  /**
+   * Helper to generate unique SEO slugs
+   */
+  private generateUniqueSlug(title: string): string {
+    const slugged = slugify(title, { lower: true, strict: true });
+    return `${slugged}-${Date.now()}`;
+  }
+
+  /**
+   * Helper to isolate ownership checks (allows easy Admin Override injection in the future)
+   */
+  public verifyOwnership(ad: Advertisement, userId: number, isAdminOverride = false): void {
+    if (isAdminOverride) return;
+    if (ad.userId !== userId) {
+      throw new ForbiddenException('You do not own this advertisement.');
+    }
+  }
+
+  /**
+   * Helper to handle and translate DB errors into proper NestJS HTTP Exceptions
+   */
+  private handleDbError(error: any): never {
+    if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.message?.includes('foreign key constraint fails')) {
+      throw new NotFoundException('Referenced Category or User does not exist.');
+    }
+    if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.message?.includes('cannot be deleted or updated')) {
+      throw new ConflictException('Cannot perform operation due to foreign key references.');
+    }
+    throw error;
+  }
+
+  async create(dto: CreateAdDto, userId: number): Promise<Advertisement> {
+    // Validate Category exists and is active
+    const category = await this.categoriesService.findById(dto.categoryId);
+    if (!category.isActive) {
+      throw new BadRequestException('Advertisements cannot be placed under inactive categories.');
+    }
+
+    const slug = this.generateUniqueSlug(dto.title);
+    const advertisement = this.adRepository.create({
+      ...dto,
+      slug,
+      userId,
+    });
+
+    try {
+      return await this.adRepository.save(advertisement);
+    } catch (err) {
+      this.handleDbError(err);
+    }
+  }
+
+  async findAll(categoryId?: number): Promise<Advertisement[]> {
+    const query = this.adRepository.createQueryBuilder('ad')
+      .where('ad.isActive = :isActive', { isActive: true });
+
+    if (categoryId) {
+      query.andWhere('ad.categoryId = :categoryId', { categoryId });
+    }
+
+    return query.getMany();
+  }
+
+  async findOne(id: number): Promise<Advertisement> {
+    const ad = await this.adRepository.findOne({ where: { id } });
+    if (!ad) {
+      throw new NotFoundException(`Advertisement with ID ${id} not found.`);
+    }
+    return ad;
+  }
+
+  async update(id: number, dto: UpdateAdDto, userId: number): Promise<Advertisement> {
+    const ad = await this.findOne(id);
+    this.verifyOwnership(ad, userId);
+
+    if (dto.categoryId !== undefined && dto.categoryId !== null && dto.categoryId !== ad.categoryId) {
+      const category = await this.categoriesService.findById(dto.categoryId);
+      if (!category.isActive) {
+        throw new BadRequestException('Advertisements cannot be placed under inactive categories.');
+      }
+      ad.categoryId = dto.categoryId;
+    }
+
+    if (dto.title) {
+      ad.title = dto.title;
+      ad.slug = this.generateUniqueSlug(dto.title);
+    }
+
+    if (dto.description !== undefined) ad.description = dto.description;
+    if (dto.price !== undefined) ad.price = dto.price;
+    if (dto.images !== undefined) ad.images = dto.images;
+    if (dto.isActive !== undefined) ad.isActive = dto.isActive;
+
+    try {
+      return await this.adRepository.save(ad);
+    } catch (err) {
+      this.handleDbError(err);
+    }
+  }
+
+  async remove(id: number, userId: number): Promise<void> {
+    const ad = await this.findOne(id);
+    this.verifyOwnership(ad, userId);
+    
+    await this.adRepository.remove(ad);
+  }
+}

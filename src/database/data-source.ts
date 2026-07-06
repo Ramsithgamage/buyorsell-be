@@ -4,6 +4,7 @@ import { User } from '../users/entities/user.entity';
 import { VerificationToken } from '../verification/entities/verification-token.entity';
 import { GuestSession } from '../guest-session/entities/guest-session.entity';
 import { Category } from '../categories/entities/category.entity';
+import { Advertisement } from '../advertisements/entities/advertisement.entity';
 
 dotenv.config();
 
@@ -14,7 +15,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [User, VerificationToken, GuestSession, Category],
+  entities: [User, VerificationToken, GuestSession, Category, Advertisement],
   migrations: [__dirname + '/migrations/*.ts'],
   synchronize: false,
 });

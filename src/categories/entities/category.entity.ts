@@ -13,6 +13,7 @@ import {
 } from 'typeorm';
 import { Expose } from 'class-transformer';
 import slugify from 'slugify';
+import { Advertisement } from '../../advertisements/entities/advertisement.entity';
 
 @Entity('categories')
 export class Category {
@@ -48,6 +49,10 @@ export class Category {
   @Expose()
   @OneToMany(() => Category, (category) => category.parent)
   children!: Category[];
+
+  @Expose()
+  @OneToMany(() => Advertisement, (ad) => ad.category)
+  advertisements!: Advertisement[];
 
   @Expose()
   @CreateDateColumn({ name: 'created_at' })

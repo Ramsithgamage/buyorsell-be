@@ -11,6 +11,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { validationSchema } from './config/configuration';
 import { CategoriesModule } from './categories/categories.module';
+import { AdvertisementsModule } from './advertisements/advertisements.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { CategoriesModule } from './categories/categories.module';
     VerificationModule,
     GuestSessionModule,
     CategoriesModule,
+    AdvertisementsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

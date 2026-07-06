@@ -156,11 +156,26 @@ export class CategoriesService {
    * Deletes a category
    */
   async delete(id: number): Promise<void> {
-    const category = await this.categoryRepository.findOne({ where: { id } });
+    const category = await this.categoryRepository.findOne({
+      where: { id },
+      relations: {
+        advertisements: true,
+      },
+    });
     if (!category) {
       throw new NotFoundException('Category not found.');
     }
-    await this.categoryRepository.remove(category);
+
+    const hasActiveAds = category.advertisements?.some((ad) => ad.isActive);
+    if (hasActiveAds) {
+      throw new ConflictException('Cannot delete category containing active advertisements.');
+    }
+
+    try {
+      await this.categoryRepository.remove(category);
+    } catch (error) {
+      throw new ConflictException('Cannot delete category referencing existing advertisements.');
+    }
   }
 
   /**
