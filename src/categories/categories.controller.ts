@@ -26,6 +26,9 @@ import {
 } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '../common/enums/user-role.enum';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -64,9 +67,10 @@ export class CategoriesController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new category (requires authentication)' })
+  @ApiOperation({ summary: 'Create a new category (Requires ADMIN role)' })
   @ApiResponse({
     status: 201,
     description: 'Category successfully created.',
@@ -90,10 +94,11 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'Category ID', type: Number })
-  @ApiOperation({ summary: 'Update an existing category (requires authentication)' })
+  @ApiOperation({ summary: 'Update an existing category (Requires ADMIN role)' })
   @ApiResponse({
     status: 200,
     description: 'Category successfully updated.',
@@ -124,11 +129,12 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiParam({ name: 'id', description: 'Category ID', type: Number })
-  @ApiOperation({ summary: 'Delete a category (requires authentication)' })
+  @ApiOperation({ summary: 'Delete a category (Requires ADMIN role)' })
   @ApiResponse({
     status: 240, // standard 204
     description: 'Category successfully deleted.',
