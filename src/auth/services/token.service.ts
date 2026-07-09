@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserRole } from '../../common/enums/user-role.enum';
+import { ApprovalStatus } from '../../common/enums/approval-status.enum';
 
 @Injectable()
 export class TokenService {
@@ -20,11 +22,18 @@ export class TokenService {
     });
   }
 
-  async generateAccessToken(userId: number, email: string): Promise<string> {
+  async generateAccessToken(
+    userId: number,
+    email: string,
+    role: UserRole,
+    approvalStatus: ApprovalStatus,
+  ): Promise<string> {
     const payload = {
       sub: userId,
       email,
       type: 'access',
+      role,
+      approvalStatus,
     };
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
@@ -32,11 +41,18 @@ export class TokenService {
     });
   }
 
-  async generateRefreshToken(userId: number, email: string): Promise<string> {
+  async generateRefreshToken(
+    userId: number,
+    email: string,
+    role: UserRole,
+    approvalStatus: ApprovalStatus,
+  ): Promise<string> {
     const payload = {
       sub: userId,
       email,
       type: 'refresh',
+      role,
+      approvalStatus,
     };
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),

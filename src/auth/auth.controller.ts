@@ -18,6 +18,7 @@ import {
 
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { RegisterVendorDto } from '../users/dto/register-vendor.dto';
 import { GuestTokenGuard } from './guards/guest-token.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
@@ -93,6 +94,68 @@ export class AuthController {
     return response;
   }
 
+  @Post('register/vendor')
+  @UseGuards(GuestTokenGuard)
+  @Throttle({ default: { limit: 5, ttl: 3600 } })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Register a new vendor account (Requires Guest Token)' })
+  @ApiBody({ type: RegisterVendorDto })
+  @ApiResponse({
+    status: 201,
+    type: RegisterResponseDto,
+    description: 'Vendor registration successful (Status defaults to PENDING)',
+  })
+  @ApiResponse({
+    status: 400,
+    type: ErrorResponseDto,
+    description: 'Duplicate email, weak password, or mismatched passwords',
+  })
+  @ApiResponse({
+    status: 401,
+    type: ErrorResponseDto,
+    description: 'Missing or invalid guest token',
+  })
+  async registerVendor(
+    @Body()
+    registerVendorDto: RegisterVendorDto,
+  ): Promise<RegisterResponseDto> {
+    const result = await this.authService.registerVendor(registerVendorDto);
+    const response = new RegisterResponseDto();
+    response.message = result.message;
+    return response;
+  }
+
+  @Post('register/admin')
+  @UseGuards(GuestTokenGuard)
+  @Throttle({ default: { limit: 5, ttl: 3600 } })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Register a new admin request (Requires Guest Token)' })
+  @ApiBody({ type: CreateUserDto })
+  @ApiResponse({
+    status: 201,
+    type: RegisterResponseDto,
+    description: 'Admin registration successful (Status defaults to PENDING)',
+  })
+  @ApiResponse({
+    status: 400,
+    type: ErrorResponseDto,
+    description: 'Duplicate email, weak password, or mismatched passwords',
+  })
+  @ApiResponse({
+    status: 401,
+    type: ErrorResponseDto,
+    description: 'Missing or invalid guest token',
+  })
+  async registerAdmin(
+    @Body()
+    createUserDto: CreateUserDto,
+  ): Promise<RegisterResponseDto> {
+    const result = await this.authService.registerAdmin(createUserDto);
+    const response = new RegisterResponseDto();
+    response.message = result.message;
+    return response;
+  }
+
   @Post('login')
   @UseGuards(GuestTokenGuard)
   @Throttle({ default: { limit: 5, ttl: 3600 } })
@@ -157,7 +220,7 @@ export class AuthController {
     @Body()
     dto: RefreshTokenDto,
   ): Promise<RefreshTokenResponseDto> {
-    const result = await this.authService.refreshToken(user.id, user.email);
+    const result = await this.authService.refreshToken(user);
     const response = new RefreshTokenResponseDto();
     response.accessToken = result.accessToken;
     response.refreshToken = result.refreshToken;

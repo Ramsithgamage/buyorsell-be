@@ -5,6 +5,8 @@ import {
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { RegisterVendorDto } from '../users/dto/register-vendor.dto';
+import { User } from '../users/entities/user.entity';
 import { ConfigService } from '@nestjs/config';
 import { GuestSessionService } from '../guest-session/guest-session.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,6 +15,8 @@ import { VerificationService } from 'src/verification/verification.service';
 import { LoginDto } from './dto/login.dto';
 import { TokenService } from './services/token.service';
 import { UserStatus } from '../common/enums/user-status.enum';
+import { UserRole } from '../common/enums/user-role.enum';
+import { ApprovalStatus } from '../common/enums/approval-status.enum';
 import {
   DuplicateEmailException,
   InvalidTokenException,
@@ -32,86 +36,93 @@ constructor(
 
 ) {}
 
-  async register(
-  createUserDto: CreateUserDto,
-) {
-  const existingUser =
-    await this.usersService.findByEmail(
-      createUserDto.email,
-    );
-
-  if (existingUser) {
-    throw new DuplicateEmailException();
+  async register(createUserDto: CreateUserDto) {
+    return this.registerUserWithRole(createUserDto, UserRole.USER, ApprovalStatus.APPROVED);
   }
 
-  const hashedPassword =
-    await bcrypt.hash(
-      createUserDto.password,
-      10,
+  async registerAdmin(createUserDto: CreateUserDto) {
+    return this.registerUserWithRole(createUserDto, UserRole.ADMIN, ApprovalStatus.PENDING);
+  }
+
+  async registerVendor(registerVendorDto: RegisterVendorDto) {
+    const existingUser = await this.usersService.findByEmail(registerVendorDto.email);
+    if (existingUser) {
+      throw new DuplicateEmailException();
+    }
+
+    const hashedPassword = await bcrypt.hash(registerVendorDto.password, 10);
+
+    const user = await this.usersService.createVendor(
+      {
+        firstName: registerVendorDto.firstName,
+        lastName: registerVendorDto.lastName,
+        email: registerVendorDto.email,
+        password: hashedPassword,
+        status: UserStatus.UNVERIFIED,
+      },
+      {
+        companyName: registerVendorDto.companyName,
+        businessRegistrationNumber: registerVendorDto.businessRegistrationNumber,
+      },
     );
 
-  const user =
-    await this.usersService.create({
-      firstName:
-        createUserDto.firstName,
-      lastName:
-        createUserDto.lastName,
-      email:
-        createUserDto.email,
+    await this.sendVerificationEmail(user);
+
+    return {
+      message: 'Registration successful. Verify your email.',
+    };
+  }
+
+  private async registerUserWithRole(
+    createUserDto: CreateUserDto,
+    role: UserRole,
+    approvalStatus: ApprovalStatus,
+  ) {
+    const existingUser = await this.usersService.findByEmail(createUserDto.email);
+    if (existingUser) {
+      throw new DuplicateEmailException();
+    }
+
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    const user = await this.usersService.create({
+      firstName: createUserDto.firstName,
+      lastName: createUserDto.lastName,
+      email: createUserDto.email,
       password: hashedPassword,
       status: UserStatus.UNVERIFIED,
+      role,
+      approvalStatus,
     });
 
-  const verificationToken =
-    crypto.randomBytes(32)
-      .toString('hex');
+    await this.sendVerificationEmail(user);
 
-  const expiresAt = new Date();
+    return {
+      message: 'Registration successful. Verify your email.',
+    };
+  }
 
-  expiresAt.setHours(
-    expiresAt.getHours() + 24,
-  );
+  private async sendVerificationEmail(user: User) {
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
 
-  await this.verificationService
-    .createToken(
+    await this.verificationService.createToken(
       verificationToken,
       user,
       expiresAt,
     );
 
-  const verificationUrlBase =
-    this.configService.get(
-      'VERIFICATION_URL_BASE',
-    );
+    const verificationUrlBase = this.configService.get('VERIFICATION_URL_BASE');
+    const verificationUrl = `${verificationUrlBase}/auth/verify?token=${verificationToken}`;
 
-  const verificationUrl =
-    `${verificationUrlBase}/auth/verify?token=${verificationToken}`;
-
-  if (
-    this.configService.get('NODE_ENV') === 'development'
-  ) {
-    console.log(
-      '\n==================================',
-    );
-
-    console.log(
-      'EMAIL VERIFICATION LINK:',
-    );
-
-    console.log(
-      verificationUrl,
-    );
-
-    console.log(
-      '==================================\n',
-    );
+    if (this.configService.get('NODE_ENV') === 'development') {
+      console.log('\n==================================');
+      console.log('EMAIL VERIFICATION LINK:');
+      console.log(verificationUrl);
+      console.log('==================================\n');
+    }
   }
-
-  return {
-    message:
-      'Registration successful. Verify your email.',
-  };
-}
 
   async getGuestToken() 
   {
@@ -136,20 +147,21 @@ constructor(
     };
   }
 
-  async refreshToken(
-    userId: number,
-    email: string,
-  ) {
+  async refreshToken(user: User) {
     const newAccessToken =
       await this.tokenService.generateAccessToken(
-        userId,
-        email,
+        user.id,
+        user.email,
+        user.role,
+        user.approvalStatus,
       );
 
     const newRefreshToken =
       await this.tokenService.generateRefreshToken(
-        userId,
-        email,
+        user.id,
+        user.email,
+        user.role,
+        user.approvalStatus,
       );
 
     const hashedRefreshToken =
@@ -160,7 +172,7 @@ constructor(
 
     await this.usersService
       .updateRefreshToken(
-        userId,
+        user.id,
         hashedRefreshToken,
       );
 
@@ -203,12 +215,16 @@ constructor(
       await this.tokenService.generateAccessToken(
         user.id,
         user.email,
+        user.role,
+        user.approvalStatus,
       );
 
     const refreshToken =
       await this.tokenService.generateRefreshToken(
         user.id,
         user.email,
+        user.role,
+        user.approvalStatus,
       );
 
     const hashedRefreshToken =
