@@ -12,6 +12,7 @@ import { Advertisement } from './entities/advertisement.entity';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { CategoriesService } from '../categories/categories.service';
+import { GetAdvertisementsDto } from './dto/get-advertisements.dto';
 
 @Injectable()
 export class AdvertisementsService {
@@ -73,15 +74,23 @@ export class AdvertisementsService {
     }
   }
 
-  async findAll(categoryId?: number): Promise<Advertisement[]> {
-    const query = this.adRepository.createQueryBuilder('ad')
-      .where('ad.isActive = :isActive', { isActive: true });
+  async findAll(dto: GetAdvertisementsDto): Promise<{ data: Advertisement[]; total: number }> {
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 10;
+    const skip = (page - 1) * limit;
 
-    if (categoryId) {
-      query.andWhere('ad.categoryId = :categoryId', { categoryId });
+    const query = this.adRepository.createQueryBuilder('ad')
+      .where('ad.isActive = :isActive', { isActive: true })
+      .orderBy('ad.createdAt', 'DESC');
+
+    if (dto.categoryId) {
+      query.andWhere('ad.categoryId = :categoryId', { categoryId: dto.categoryId });
     }
 
-    return query.getMany();
+    query.skip(skip).take(limit);
+
+    const [data, total] = await query.getManyAndCount();
+    return { data, total };
   }
 
   async findOne(id: number): Promise<Advertisement> {

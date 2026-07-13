@@ -34,6 +34,8 @@ import { AdvertisementsService } from './advertisements.service';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { AdResponseDto } from './dto/ad-response.dto';
+import { GetAdvertisementsDto } from './dto/get-advertisements.dto';
+import { PaginatedAdResponseDto } from './dto/paginated-ad-response.dto';
 
 @ApiTags('Advertisements')
 @Controller('advertisements')
@@ -46,8 +48,9 @@ export class AdvertisementsController {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
-  private getCacheKey(categoryId?: number): string {
-    return categoryId ? `${this.CACHE_PREFIX}_cat_${categoryId}` : `${this.CACHE_PREFIX}_all`;
+  private getCacheKey(query: GetAdvertisementsDto): string {
+    const catPart = query.categoryId ? `_cat_${query.categoryId}` : '';
+    return `${this.CACHE_PREFIX}${catPart}_p_${query.page ?? 1}_l_${query.limit ?? 10}`;
   }
 
   private async evictCache(): Promise<void> {
@@ -58,21 +61,32 @@ export class AdvertisementsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active advertisements' })
-  @ApiQuery({ name: 'categoryId', required: false, type: Number })
-  @ApiResponse({ status: 200, type: [AdResponseDto] })
-  async findAll(@Query('categoryId') categoryId?: number): Promise<AdResponseDto[]> {
-    const cacheKey = this.getCacheKey(categoryId);
-    const cached = await this.cacheManager.get<AdResponseDto[]>(cacheKey);
+  @ApiOperation({ summary: 'Get all active advertisements with offset pagination' })
+  @ApiResponse({ status: 200, type: PaginatedAdResponseDto })
+  async findAll(@Query() query: GetAdvertisementsDto): Promise<PaginatedAdResponseDto> {
+    const cacheKey = this.getCacheKey(query);
+    const cached = await this.cacheManager.get<PaginatedAdResponseDto>(cacheKey);
     if (cached) {
       return cached;
     }
 
-    const ads = await this.adsService.findAll(categoryId);
-    const result = plainToInstance(AdResponseDto, ads);
+    const { data, total } = await this.adsService.findAll(query);
+    const limit = query.limit ?? 10;
+    const totalPages = Math.ceil(total / limit);
 
-    await this.cacheManager.set(cacheKey, result);
-    return result;
+    const paginatedResponse: PaginatedAdResponseDto = {
+      data: plainToInstance(AdResponseDto, data),
+      meta: {
+        totalItems: total,
+        itemCount: data.length,
+        itemsPerPage: limit,
+        totalPages,
+        currentPage: query.page ?? 1,
+      },
+    };
+
+    await this.cacheManager.set(cacheKey, paginatedResponse);
+    return paginatedResponse;
   }
 
   @Get(':id')
