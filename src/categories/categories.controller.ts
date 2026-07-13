@@ -134,17 +134,21 @@ export class CategoriesController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiParam({ name: 'id', description: 'Category ID', type: Number })
-  @ApiOperation({ summary: 'Delete a category (Requires ADMIN role)' })
+  @ApiOperation({ summary: 'Logically delete/deactivate a category and all its descendants (Requires ADMIN role)' })
   @ApiResponse({
-    status: 240, // standard 204
-    description: 'Category successfully deleted.',
+    status: 204,
+    description: 'Category and its descendants successfully deactivated.',
   })
   @ApiResponse({
     status: 404,
     description: 'Category not found.',
   })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict (category tree contains active advertisements).',
+  })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    await this.categoriesService.delete(id);
+    await this.categoriesService.deleteCategoryTree(id);
     
     // Evict the categories tree cache
     await this.cacheManager.del(this.CACHE_KEY);

@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { Repository, Not, In } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -16,7 +16,7 @@ export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
-  ) {}
+  ) { }
 
   /**
    * Helper to resolve/generate a slug for a category name
@@ -153,29 +153,66 @@ export class CategoriesService {
   }
 
   /**
-   * Deletes a category
+   * Logically deletes/deactivates a category and all its descendants.
    */
-  async delete(id: number): Promise<void> {
-    const category = await this.categoryRepository.findOne({
-      where: { id },
-      relations: {
-        advertisements: true,
-      },
-    });
+  async deleteCategoryTree(id: number): Promise<void> {
+    const category = await this.categoryRepository.findOne({ where: { id } });
     if (!category) {
       throw new NotFoundException('Category not found.');
     }
 
-    const hasActiveAds = category.advertisements?.some((ad) => ad.isActive);
-    if (hasActiveAds) {
-      throw new ConflictException('Cannot delete category containing active advertisements.');
+    // 1. Collect target category and all descendant IDs
+    const allCategoryIds = await this.getDescendantIds(id);
+
+    // 2. Verify no active advertisements exist in any of these categories
+    const categoriesWithAds = await this.categoryRepository.find({
+      where: { id: In(allCategoryIds) },
+      relations: { advertisements: true },
+    });
+
+    for (const cat of categoriesWithAds) {
+      if (cat.advertisements?.some((ad) => ad.isActive)) {
+        throw new ConflictException(
+          'Cannot deactivate category tree containing active advertisements.',
+        );
+      }
     }
 
-    try {
-      await this.categoryRepository.remove(category);
-    } catch (error) {
-      throw new ConflictException('Cannot delete category referencing existing advertisements.');
+    // 3. Perform recursive cascade deactivation
+    await this.deactivateCategoryAndDescendants(id);
+  }
+
+  /**
+   * Private recursive helper to deactivate a category and all its descendants.
+   */
+  private async deactivateCategoryAndDescendants(categoryId: number): Promise<void> {
+    // 1. Perform an update statement to set isActive = false on the current categoryId
+    await this.categoryRepository.update(categoryId, { isActive: false });
+
+    // 2. Query the database to find all immediate children where parentId matches the current categoryId
+    const children = await this.categoryRepository.find({
+      where: { parentId: categoryId },
+    });
+
+    // 3. Loop through these children and call the recursive helper function
+    for (const child of children) {
+      await this.deactivateCategoryAndDescendants(child.id);
     }
+  }
+
+  /**
+   * Helper to retrieve target category ID and all descendant category IDs recursively.
+   */
+  private async getDescendantIds(categoryId: number): Promise<number[]> {
+    const ids: number[] = [categoryId];
+    const children = await this.categoryRepository.find({
+      where: { parentId: categoryId },
+    });
+    for (const child of children) {
+      const childIds = await this.getDescendantIds(child.id);
+      ids.push(...childIds);
+    }
+    return ids;
   }
 
   /**
