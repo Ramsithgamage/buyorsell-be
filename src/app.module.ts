@@ -12,6 +12,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { validationSchema } from './config/configuration';
 import { CategoriesModule } from './categories/categories.module';
 import { AdvertisementsModule } from './advertisements/advertisements.module';
+import { ApiLogModule } from './api-log/api-log.module';
 
 @Module({
   imports: [
@@ -57,8 +58,9 @@ import { AdvertisementsModule } from './advertisements/advertisements.module';
     GuestSessionModule,
     CategoriesModule,
     AdvertisementsModule,
+    ApiLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule { }
