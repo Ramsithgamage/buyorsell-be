@@ -13,6 +13,9 @@ import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { CategoriesService } from '../categories/categories.service';
 import { GetAdvertisementsDto } from './dto/get-advertisements.dto';
+import { UserRole } from '../common/enums/user-role.enum';
+import { ApprovalStatus } from '../common/enums/approval-status.enum';
+import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AdvertisementsService {
@@ -130,9 +133,15 @@ export class AdvertisementsService {
     }
   }
 
-  async remove(id: number, userId: number): Promise<void> {
+  async remove(id: number, user: JwtPayload): Promise<void> {
     const ad = await this.findOne(id);
-    this.verifyOwnership(ad, userId);
+    
+    const isOwner = ad.userId === user.sub;
+    const isAdmin = user.role === UserRole.ADMIN && user.approvalStatus === ApprovalStatus.APPROVED;
+
+    if (!isOwner && !isAdmin) {
+      throw new ForbiddenException('You do not have permission to delete this advertisement.');
+    }
     
     await this.adRepository.remove(ad);
   }

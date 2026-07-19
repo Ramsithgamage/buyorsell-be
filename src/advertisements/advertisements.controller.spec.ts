@@ -7,6 +7,8 @@ import { UpdateAdDto } from './dto/update-ad.dto';
 import { Advertisement } from './entities/advertisement.entity';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 
+import { GetAdvertisementsDto } from './dto/get-advertisements.dto';
+
 describe('AdvertisementsController', () => {
   let controller: AdvertisementsController;
   let service: jest.Mocked<AdvertisementsService>;
@@ -49,24 +51,35 @@ describe('AdvertisementsController', () => {
 
   describe('findAll', () => {
     it('should return from cache if it exists', async () => {
-      const cachedData = [{ id: 1, title: 'Ad 1' }];
+      const cachedData = {
+        data: [{ id: 1, title: 'Ad 1' }],
+        meta: {
+          totalItems: 1,
+          itemCount: 1,
+          itemsPerPage: 10,
+          totalPages: 1,
+          currentPage: 1,
+        },
+      };
       cacheManager.get.mockResolvedValue(cachedData);
 
-      const result = await controller.findAll();
+      const query: GetAdvertisementsDto = { page: 1, limit: 10 };
+      const result = await controller.findAll(query);
       expect(result).toEqual(cachedData);
-      expect(cacheManager.get).toHaveBeenCalledWith('advertisements_list_all');
+      expect(cacheManager.get).toHaveBeenCalledWith('advertisements_list_p_1_l_10');
       expect(service.findAll).not.toHaveBeenCalled();
     });
 
     it('should query service and set cache if not cached', async () => {
       const freshData = [{ id: 1, title: 'Ad 1', price: 100, slug: 'ad-1' }] as Advertisement[];
       cacheManager.get.mockResolvedValue(null);
-      service.findAll.mockResolvedValue(freshData);
+      service.findAll.mockResolvedValue({ data: freshData, total: 1 });
 
-      const result = await controller.findAll();
-      expect(result).toHaveLength(1);
-      expect(result[0].title).toBe('Ad 1');
-      expect(cacheManager.set).toHaveBeenCalledWith('advertisements_list_all', expect.any(Array));
+      const query: GetAdvertisementsDto = { page: 1, limit: 10 };
+      const result = await controller.findAll(query);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].title).toBe('Ad 1');
+      expect(cacheManager.set).toHaveBeenCalledWith('advertisements_list_p_1_l_10', expect.any(Object));
     });
   });
 
@@ -106,7 +119,7 @@ describe('AdvertisementsController', () => {
       service.remove.mockResolvedValue(undefined);
 
       await expect(controller.remove(1, user)).resolves.not.toThrow();
-      expect(service.remove).toHaveBeenCalledWith(1, 1);
+      expect(service.remove).toHaveBeenCalledWith(1, user);
       expect(cacheManager.clear).toHaveBeenCalled();
     });
   });

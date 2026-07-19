@@ -28,6 +28,7 @@ import {
 } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { AdvertisementsService } from './advertisements.service';
@@ -131,18 +132,18 @@ export class AdvertisementsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiParam({ name: 'id', type: Number })
-  @ApiOperation({ summary: 'Delete advertisement' })
+  @ApiOperation({ summary: 'Delete advertisement (Owner or ADMIN role required)' })
   @ApiResponse({ status: 204, description: 'No content' })
-  @ApiResponse({ status: 403, description: 'Owner validation failed' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   async remove(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ): Promise<void> {
-    await this.adsService.remove(id, user.sub!);
+    await this.adsService.remove(id, user);
     await this.evictCache();
   }
 }

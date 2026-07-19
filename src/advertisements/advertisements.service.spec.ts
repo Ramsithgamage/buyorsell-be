@@ -11,6 +11,8 @@ import { AdvertisementsService } from './advertisements.service';
 import { Advertisement } from './entities/advertisement.entity';
 import { CategoriesService } from '../categories/categories.service';
 import { Category } from '../categories/entities/category.entity';
+import { UserRole } from '../common/enums/user-role.enum';
+import { ApprovalStatus } from '../common/enums/approval-status.enum';
 
 describe('AdvertisementsService', () => {
   let service: AdvertisementsService;
@@ -126,7 +128,7 @@ describe('AdvertisementsService', () => {
       adRepository.findOne.mockResolvedValue(mockAd);
       adRepository.remove.mockResolvedValue(mockAd);
 
-      await expect(service.remove(1, 1)).resolves.not.toThrow();
+      await expect(service.remove(1, { sub: 1, type: 'access' })).resolves.not.toThrow();
       expect(adRepository.remove).toHaveBeenCalledWith(mockAd);
     });
 
@@ -134,7 +136,23 @@ describe('AdvertisementsService', () => {
       const mockAd = { id: 1, userId: 2 } as Advertisement;
       adRepository.findOne.mockResolvedValue(mockAd);
 
-      await expect(service.remove(1, 1)).rejects.toThrow(ForbiddenException);
+      await expect(service.remove(1, { sub: 1, type: 'access' })).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should remove an advertisement if user is an approved admin', async () => {
+      const mockAd = { id: 1, userId: 2 } as Advertisement;
+      adRepository.findOne.mockResolvedValue(mockAd);
+      adRepository.remove.mockResolvedValue(mockAd);
+
+      await expect(
+        service.remove(1, {
+          sub: 1,
+          type: 'access',
+          role: UserRole.ADMIN,
+          approvalStatus: ApprovalStatus.APPROVED,
+        }),
+      ).resolves.not.toThrow();
+      expect(adRepository.remove).toHaveBeenCalledWith(mockAd);
     });
   });
 
