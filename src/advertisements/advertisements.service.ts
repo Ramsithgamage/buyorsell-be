@@ -4,11 +4,14 @@ import {
   ForbiddenException,
   BadRequestException,
   ConflictException,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import slugify from 'slugify';
 import { Advertisement } from './entities/advertisement.entity';
+import { AdvertisementArchive } from './entities/advertisement-archive.entity';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
 import { CategoriesService } from '../categories/categories.service';
@@ -19,10 +22,13 @@ import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AdvertisementsService {
+  private readonly logger = new Logger(AdvertisementsService.name);
+
   constructor(
     @InjectRepository(Advertisement)
     private readonly adRepository: Repository<Advertisement>,
     private readonly categoriesService: CategoriesService,
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -134,15 +140,41 @@ export class AdvertisementsService {
   }
 
   async remove(id: number, user: JwtPayload): Promise<void> {
-    const ad = await this.findOne(id);
-    
-    const isOwner = ad.userId === user.sub;
-    const isAdmin = user.role === UserRole.ADMIN && user.approvalStatus === ApprovalStatus.APPROVED;
+    await this.dataSource.transaction(async (manager) => {
+      const ad = await manager.findOne(Advertisement, { where: { id } });
+      
+      if (!ad) {
+        throw new NotFoundException(`Advertisement with ID ${id} not found.`);
+      }
 
-    if (!isOwner && !isAdmin) {
-      throw new ForbiddenException('You do not have permission to delete this advertisement.');
-    }
-    
-    await this.adRepository.remove(ad);
+      const isOwner = ad.userId === user.sub;
+      const isAdmin = user.role === UserRole.ADMIN && user.approvalStatus === ApprovalStatus.APPROVED;
+
+      if (!isOwner && !isAdmin) {
+        throw new ForbiddenException('You do not have permission to delete this advertisement.');
+      }
+
+      const archive = manager.create(AdvertisementArchive, {
+        id: ad.id,
+        title: ad.title,
+        slug: ad.slug,
+        description: ad.description,
+        price: ad.price,
+        userId: ad.userId,
+        categoryId: ad.categoryId,
+        images: ad.images,
+        createdAt: ad.createdAt,
+        updatedAt: ad.updatedAt,
+        archivedBy: user.sub,
+      });
+
+      try {
+        await manager.save(archive);
+        await manager.remove(ad);
+      } catch (error) {
+        this.logger.error(`Failed to archive advertisement ID ${id}`, error);
+        throw new InternalServerErrorException('An error occurred while archiving the advertisement.');
+      }
+    });
   }
 }

@@ -6,6 +6,7 @@ import { VerificationToken } from '../verification/entities/verification-token.e
 import { GuestSession } from '../guest-session/entities/guest-session.entity';
 import { Category } from '../categories/entities/category.entity';
 import { Advertisement } from '../advertisements/entities/advertisement.entity';
+import { AdvertisementArchive } from '../advertisements/entities/advertisement-archive.entity';
 import { ApiLog } from '../api-log/entities/api-log.entity';
 
 dotenv.config();
@@ -17,7 +18,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [User, VendorProfile, VerificationToken, GuestSession, Category, Advertisement, ApiLog],
+  entities: [User, VendorProfile, VerificationToken, GuestSession, Category, Advertisement, AdvertisementArchive, ApiLog],
   migrations: [__dirname + '/migrations/*.ts'],
   synchronize: false,
 });
