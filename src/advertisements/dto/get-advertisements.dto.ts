@@ -1,4 +1,4 @@
-import { IsOptional, IsInt, Min, Max, IsPositive } from 'class-validator';
+import { IsOptional, IsInt, Min, Max, IsPositive, IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -24,4 +24,9 @@ export class GetAdvertisementsDto {
   @IsInt()
   @IsPositive()
   categoryId?: number;
+
+  @ApiProperty({ example: 'iphone', required: false })
+  @IsOptional()
+  @IsString()
+  q?: string;
 }

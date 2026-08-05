@@ -33,7 +33,7 @@ async function bootstrap() {
   app.enableCors({
     origin: nodeEnv === 'production'
       ? process.env.CORS_ORIGIN?.split(',') || ['https://yourdomain.com']
-      : '*',
+      : 'http://localhost:8080',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

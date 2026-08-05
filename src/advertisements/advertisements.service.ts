@@ -89,11 +89,16 @@ export class AdvertisementsService {
     const skip = (page - 1) * limit;
 
     const query = this.adRepository.createQueryBuilder('ad')
+      .leftJoinAndSelect('ad.user', 'user')
       .where('ad.isActive = :isActive', { isActive: true })
       .orderBy('ad.createdAt', 'DESC');
 
     if (dto.categoryId) {
       query.andWhere('ad.categoryId = :categoryId', { categoryId: dto.categoryId });
+    }
+
+    if (dto.q) {
+      query.andWhere('ad.title LIKE :q', { q: `%${dto.q}%` });
     }
 
     query.skip(skip).take(limit);
