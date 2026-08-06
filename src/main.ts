@@ -5,9 +5,15 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
+
+  // Serve static assets from the public directory
+  app.useStaticAssets(join(__dirname, '..', 'public'));
 
   app.useGlobalFilters(new GlobalExceptionFilter());
 
@@ -15,6 +21,7 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
 

@@ -14,7 +14,9 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { plainToInstance } from 'class-transformer';
@@ -103,13 +105,15 @@ export class AdvertisementsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @UseInterceptors(FilesInterceptor('images', 5))
   @ApiOperation({ summary: 'Create advertisement' })
   @ApiResponse({ status: 201, type: AdResponseDto })
   async create(
     @Body() createDto: CreateAdDto,
     @CurrentUser() user: JwtPayload,
+    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<AdResponseDto> {
-    const ad = await this.adsService.create(createDto, user.sub!);
+    const ad = await this.adsService.create(createDto, user.sub!, files);
     await this.evictCache();
     return plainToInstance(AdResponseDto, ad);
   }

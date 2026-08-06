@@ -7,6 +7,8 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import slugify from 'slugify';
@@ -62,16 +64,36 @@ export class AdvertisementsService {
     throw error;
   }
 
-  async create(dto: CreateAdDto, userId: number): Promise<Advertisement> {
+  async create(dto: CreateAdDto, userId: number, files?: Express.Multer.File[]): Promise<Advertisement> {
     // Validate Category exists and is active
     const category = await this.categoriesService.findById(dto.categoryId);
     if (!category.isActive) {
       throw new BadRequestException('Advertisements cannot be placed under inactive categories.');
     }
 
+    let imageUrls: string[] = dto.images || [];
+
+    if (files && files.length > 0) {
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      for (const file of files) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = path.extname(file.originalname) || '.jpg';
+        const filename = `${uniqueSuffix}${ext}`;
+        const filePath = path.join(uploadDir, filename);
+        
+        await fs.promises.writeFile(filePath, file.buffer);
+        imageUrls.push(`http://localhost:3000/uploads/${filename}`);
+      }
+    }
+
     const slug = this.generateUniqueSlug(dto.title);
     const advertisement = this.adRepository.create({
       ...dto,
+      images: imageUrls,
       slug,
       userId,
     });
