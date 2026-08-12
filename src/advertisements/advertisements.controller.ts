@@ -121,6 +121,7 @@ export class AdvertisementsController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @UseInterceptors(FilesInterceptor('images', 5))
   @ApiParam({ name: 'id', type: Number })
   @ApiOperation({ summary: 'Update advertisement' })
   @ApiResponse({ status: 200, type: AdResponseDto })
@@ -129,8 +130,9 @@ export class AdvertisementsController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdateAdDto,
     @CurrentUser() user: JwtPayload,
+    @UploadedFiles() files: Express.Multer.File[],
   ): Promise<AdResponseDto> {
-    const ad = await this.adsService.update(id, updateDto, user.sub!);
+    const ad = await this.adsService.update(id, updateDto, user.sub!, files);
     await this.evictCache();
     return plainToInstance(AdResponseDto, ad);
   }

@@ -91,9 +91,9 @@ describe('AdvertisementsController', () => {
 
       service.create.mockResolvedValue(mockResult);
 
-      const result = await controller.create(dto, user);
+      const result = await controller.create(dto, user, []);
       expect(result.id).toBe(1);
-      expect(service.create).toHaveBeenCalledWith(dto, 1);
+      expect(service.create).toHaveBeenCalledWith(dto, 1, []);
       expect(cacheManager.clear).toHaveBeenCalled();
     });
   });
@@ -106,9 +106,9 @@ describe('AdvertisementsController', () => {
 
       service.update.mockResolvedValue(mockResult);
 
-      const result = await controller.update(1, dto, user);
+      const result = await controller.update(1, dto, user, []);
       expect(result.title).toBe('Updated Ad');
-      expect(service.update).toHaveBeenCalledWith(1, dto, 1);
+      expect(service.update).toHaveBeenCalledWith(1, dto, 1, []);
       expect(cacheManager.clear).toHaveBeenCalled();
     });
   });

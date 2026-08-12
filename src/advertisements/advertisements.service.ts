@@ -130,14 +130,17 @@ export class AdvertisementsService {
   }
 
   async findOne(id: number): Promise<Advertisement> {
-    const ad = await this.adRepository.findOne({ where: { id } });
+    const ad = await this.adRepository.findOne({ 
+      where: { id },
+      relations: { user: true } 
+    });
     if (!ad) {
       throw new NotFoundException(`Advertisement with ID ${id} not found.`);
     }
     return ad;
   }
 
-  async update(id: number, dto: UpdateAdDto, userId: number): Promise<Advertisement> {
+  async update(id: number, dto: UpdateAdDto, userId: number, files?: Express.Multer.File[]): Promise<Advertisement> {
     const ad = await this.findOne(id);
     this.verifyOwnership(ad, userId);
 
@@ -156,8 +159,27 @@ export class AdvertisementsService {
 
     if (dto.description !== undefined) ad.description = dto.description;
     if (dto.price !== undefined) ad.price = dto.price;
-    if (dto.images !== undefined) ad.images = dto.images;
     if (dto.isActive !== undefined) ad.isActive = dto.isActive;
+
+    let imageUrls: string[] = dto.images || ad.images || [];
+
+    if (files && files.length > 0) {
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      for (const file of files) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const ext = path.extname(file.originalname) || '.jpg';
+        const filename = `${uniqueSuffix}${ext}`;
+        const filePath = path.join(uploadDir, filename);
+        
+        await fs.promises.writeFile(filePath, file.buffer);
+        imageUrls.push(`http://localhost:3000/uploads/${filename}`);
+      }
+    }
+    ad.images = imageUrls.slice(0, 5); // limit to max 5
 
     try {
       return await this.adRepository.save(ad);
