@@ -245,6 +245,8 @@ constructor(
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        role: user.role,
+        approvalStatus: user.approvalStatus,
       },
       accessToken,
       refreshToken,

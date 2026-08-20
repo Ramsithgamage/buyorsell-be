@@ -68,6 +68,8 @@ export class AppController {
       firstName: userEntity.firstName,
       lastName: userEntity.lastName,
       email: userEntity.email,
+      role: userEntity.role,
+      approvalStatus: userEntity.approvalStatus,
     };
   }
 }

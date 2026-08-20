@@ -24,4 +24,16 @@ export class UserResponseDto {
     description: 'Email address of the user',
   })
   email!: string;
+
+  @ApiProperty({
+    example: 'USER',
+    description: 'Role of the user (USER, VENDOR, ADMIN)',
+  })
+  role!: string;
+
+  @ApiProperty({
+    example: 'APPROVED',
+    description: 'Approval status of the user (PENDING, APPROVED, REJECTED)',
+  })
+  approvalStatus!: string;
 }

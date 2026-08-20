@@ -13,6 +13,7 @@ import { validationSchema } from './config/configuration';
 import { CategoriesModule } from './categories/categories.module';
 import { AdvertisementsModule } from './advertisements/advertisements.module';
 import { ApiLogModule } from './api-log/api-log.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { ApiLogModule } from './api-log/api-log.module';
     CategoriesModule,
     AdvertisementsModule,
     ApiLogModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
