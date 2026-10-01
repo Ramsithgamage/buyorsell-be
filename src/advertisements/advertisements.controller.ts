@@ -33,6 +33,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { UserRole } from '../common/enums/user-role.enum';
+import { ApprovalStatus } from '../common/enums/approval-status.enum';
 import { AdvertisementsService } from './advertisements.service';
 import { CreateAdDto } from './dto/create-ad.dto';
 import { UpdateAdDto } from './dto/update-ad.dto';
@@ -132,7 +134,8 @@ export class AdvertisementsController {
     @CurrentUser() user: JwtPayload,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<AdResponseDto> {
-    const ad = await this.adsService.update(id, updateDto, user.sub!, files);
+    const isAdminOverride = user.role === UserRole.ADMIN && user.approvalStatus === ApprovalStatus.APPROVED;
+    const ad = await this.adsService.update(id, updateDto, user.sub!, files, isAdminOverride);
     await this.evictCache();
     return plainToInstance(AdResponseDto, ad);
   }

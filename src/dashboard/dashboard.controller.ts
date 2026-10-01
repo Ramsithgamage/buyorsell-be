@@ -144,4 +144,31 @@ export class DashboardController {
   getPendingApprovals() {
     return this.dashboardService.getPendingApprovals();
   }
+
+  @Get('admin/advertisements')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all advertisements (ADMIN only)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'isActive', required: false, type: Boolean })
+  @ApiResponse({ status: 200, description: 'Paginated list of advertisements' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid JWT token' })
+  @ApiResponse({ status: 403, description: 'ADMIN role required' })
+  getAdminAds(
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('isActive') isActiveStr?: string,
+  ) {
+    let isActive: boolean | undefined = undefined;
+    if (isActiveStr !== undefined) {
+      isActive = isActiveStr === 'true';
+    }
+    return this.dashboardService.getAdminAds(
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 15,
+      isActive,
+    );
+  }
 }

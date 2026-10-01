@@ -139,4 +139,35 @@ export class DashboardService {
       },
     });
   }
+
+  async getAdminAds(
+    page: number = 1,
+    limit: number = 15,
+    isActive?: boolean,
+  ): Promise<PaginatedResult<Advertisement>> {
+    const skip = (page - 1) * limit;
+    const where: any = {};
+    if (isActive !== undefined) {
+      where.isActive = isActive;
+    }
+    
+    const [data, totalItems] = await this.adRepository.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      skip,
+      take: limit,
+      relations: { user: true, category: true },
+    });
+
+    return {
+      data,
+      meta: {
+        totalItems,
+        itemCount: data.length,
+        itemsPerPage: limit,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      },
+    };
+  }
 }

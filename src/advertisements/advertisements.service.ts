@@ -140,9 +140,9 @@ export class AdvertisementsService {
     return ad;
   }
 
-  async update(id: number, dto: UpdateAdDto, userId: number, files?: Express.Multer.File[]): Promise<Advertisement> {
+  async update(id: number, dto: UpdateAdDto, userId: number, files?: Express.Multer.File[], isAdminOverride = false): Promise<Advertisement> {
     const ad = await this.findOne(id);
-    this.verifyOwnership(ad, userId);
+    this.verifyOwnership(ad, userId, isAdminOverride);
 
     if (dto.categoryId !== undefined && dto.categoryId !== null && dto.categoryId !== ad.categoryId) {
       const category = await this.categoriesService.findById(dto.categoryId);
