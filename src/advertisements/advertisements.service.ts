@@ -31,7 +31,7 @@ export class AdvertisementsService {
     private readonly adRepository: Repository<Advertisement>,
     private readonly categoriesService: CategoriesService,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
 
   /**
    * Helper to generate unique SEO slugs
@@ -84,7 +84,7 @@ export class AdvertisementsService {
         const ext = path.extname(file.originalname) || '.jpg';
         const filename = `${uniqueSuffix}${ext}`;
         const filePath = path.join(uploadDir, filename);
-        
+
         await fs.promises.writeFile(filePath, file.buffer);
         imageUrls.push(`http://localhost:3000/uploads/${filename}`);
       }
@@ -130,9 +130,9 @@ export class AdvertisementsService {
   }
 
   async findOne(id: number): Promise<Advertisement> {
-    const ad = await this.adRepository.findOne({ 
+    const ad = await this.adRepository.findOne({
       where: { id },
-      relations: { user: true } 
+      relations: { user: true }
     });
     if (!ad) {
       throw new NotFoundException(`Advertisement with ID ${id} not found.`);
@@ -174,7 +174,7 @@ export class AdvertisementsService {
         const ext = path.extname(file.originalname) || '.jpg';
         const filename = `${uniqueSuffix}${ext}`;
         const filePath = path.join(uploadDir, filename);
-        
+
         await fs.promises.writeFile(filePath, file.buffer);
         imageUrls.push(`http://localhost:3000/uploads/${filename}`);
       }
@@ -191,7 +191,7 @@ export class AdvertisementsService {
   async remove(id: number, user: JwtPayload): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       const ad = await manager.findOne(Advertisement, { where: { id } });
-      
+
       if (!ad) {
         throw new NotFoundException(`Advertisement with ID ${id} not found.`);
       }

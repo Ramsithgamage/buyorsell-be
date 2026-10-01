@@ -49,7 +49,7 @@ export class AdvertisementsController {
   constructor(
     private readonly adsService: AdvertisementsService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) {}
+  ) { }
 
   private getCacheKey(query: GetAdvertisementsDto): string {
     const catPart = query.categoryId ? `_cat_${query.categoryId}` : '';

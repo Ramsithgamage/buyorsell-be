@@ -1,5 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
+
+export class AdUserDto {
+  @ApiProperty({ example: 'John' })
+  @Expose()
+  firstName!: string;
+
+  @ApiProperty({ example: 'Doe' })
+  @Expose()
+  lastName!: string;
+}
 
 export class AdResponseDto {
   @ApiProperty({ example: 1 })
@@ -45,4 +55,9 @@ export class AdResponseDto {
   @ApiProperty({ example: '2026-07-01T12:00:00.000Z' })
   @Expose()
   updatedAt!: Date;
+
+  @ApiProperty({ type: AdUserDto, required: false })
+  @Expose()
+  @Type(() => AdUserDto)
+  user?: AdUserDto;
 }
