@@ -149,10 +149,17 @@ The server will boot and listen on `http://localhost:3000`. Swagger API document
   ```
 * **Information Leakage Prevention**: Stack traces and raw SQL queries are automatically caught and logged internally using NestJS `Logger`. Non-HTTP runtime errors are returned to clients as a sanitized `500 Internal server error` message.
 
+### Role-Based Access Control (RBAC) & Vendor Onboarding
+* **System Roles**: Implements `USER`, `VENDOR`, and `ADMIN` roles. Standard user signups are automatically approved, while `VENDOR` and `ADMIN` signups default to a `PENDING` state.
+* **Administrative Approvals**: A protected administraative endpoint allows `ADMIN` users to review and update the approval status (`APPROVED`, `REJECTED`, `PENDING`) of other accounts.
+* **Vendor Profiles**: Isolates vendor-specific onboarding data (e.g., Company Name, Business Registration Number) into a dedicated `vendor_profiles` table with a strict 1:1 relationship to the user account.
+* **Guard-Level Status Checks**: The authentication guards (`JwtAuthGuard` and `RolesGuard`) are refined to intercept requests from `VENDOR` or `ADMIN` accounts and immediately return a `403 Forbidden` response if their administrative status is not `APPROVED`, securing all protected business routes.
+
 ### Categories Module Design
 * **In-Memory Tree Construction**: Resolves hierarchical category trees efficiently in memory from a flat database search, preventing recursive database load.
 * **Active Branch Pruning**: If a parent category is deactivated, all of its descendants are recursively omitted from the public tree response, even if they are individually marked as active.
 * **Circular Ancestry Prevention**: Validates modifications to parent nodes recursively, throwing a `400 Bad Request` exception if a cycle (e.g. `A -> B -> A`) is detected.
+* **Admin-Only Mutations**: Restricts all write operations (creating, updating, and deleting categories) strictly to users with the `ADMIN` role using a custom `RolesGuard`.
 * **Cache Eviction**: Public read endpoints (`GET /categories`) are cached using `@nestjs/cache-manager`. Write operations (`POST`, `PATCH`, `DELETE`) immediately evict the cache key to maintain consistency.
 
 ### Advertisements Module Design
@@ -162,6 +169,12 @@ The server will boot and listen on `http://localhost:3000`. Swagger API document
 * **Media Upload Limitations**: Validates and restricts `images` arrays to a maximum of 5 URLs using whitelist validators (`@ArrayMaxSize(5)`), stored in a MySQL JSON column type.
 * **Ownership Access Boundary**: Enforces strict owner-only authorization (`user.sub === advertisement.userId`) via `JwtAuthGuard` and `@CurrentUser()` decorators for updates (`PATCH`) and deletions (`DELETE`). The service method is isolated to allow future Admin override checks.
 * **Endpoint caching & Invalidation**: Caches public listings (`GET /advertisements`) and invalidates cache entries immediately on mutations (`POST`, `PATCH`, `DELETE`) to keep cached listings up to date.
+
+### Asynchronous API Logging Module
+* **Non-Blocking Architecture**: Performs fire-and-forget logging via TypeORM completely outside the core application response promise chain. Failures to save logs are caught locally and piped to `ConsoleLogger` without affecting request execution.
+* **Sensitive Payload Masking**: Deep-clones incoming payloads and recursively masks values of sensitive keys (such as `password`, `token`, `accessToken`, `refreshToken`) replacing them with `********`.
+* **High-Resolution Performance Markers**: Tracks request duration precisely in milliseconds using performance markers (`performance.now()`).
+* **Log Retention Policy**: Utilizes `@nestjs/schedule` to run a daily cleanup job at midnight, deleting log entries older than 7 days (`createdAt` < 7 days ago) to optimize database space.
 
 ### Core Security Practices
 1. **Response Serialization (Whitelist Approach)**:
