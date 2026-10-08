@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -23,6 +24,25 @@ import { DashboardModule } from './dashboard/dashboard.module';
       validationOptions: {
         abortEarly: true,
       },
+    }),
+
+    MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        transport: {
+          host: configService.get<string>('BREVO_SMTP_HOST'),
+          port: configService.get<number>('BREVO_SMTP_PORT'),
+          secure: false, // true for 465, false for other ports
+          auth: {
+            user: configService.get<string>('BREVO_SMTP_USER'),
+            pass: configService.get<string>('BREVO_SMTP_PASSWORD'),
+          },
+        },
+        defaults: {
+          from: configService.get<string>('EMAIL_FROM'),
+        },
+      }),
     }),
 
     ScheduleModule.forRoot(),

@@ -1,6 +1,7 @@
 import {
   Injectable,
 } from '@nestjs/common';
+import { MailerService } from '@nestjs-modules/mailer';
 
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
@@ -27,14 +28,15 @@ import {
 
 @Injectable()
 export class AuthService {
-constructor(
-  private readonly usersService: UsersService,
-  private readonly configService: ConfigService,
-  private readonly guestSessionService: GuestSessionService,  
-  private readonly verificationService: VerificationService,
-  private readonly tokenService: TokenService,
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
+    private readonly guestSessionService: GuestSessionService,
+    private readonly verificationService: VerificationService,
+    private readonly tokenService: TokenService,
+    private readonly mailerService: MailerService,
 
-) {}
+  ) { }
 
   async register(createUserDto: CreateUserDto) {
     return this.registerUserWithRole(createUserDto, UserRole.USER, ApprovalStatus.APPROVED);
@@ -116,6 +118,19 @@ constructor(
     const verificationUrlBase = this.configService.get('VERIFICATION_URL_BASE');
     const verificationUrl = `${verificationUrlBase}/auth/verify?token=${verificationToken}`;
 
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Verify your Account',
+      html: `
+        <h2>Welcome to BuyOrSell.lk, ${user.firstName}!</h2>
+        <p>Please click the link below to verify your email address and activate your account.</p>
+        <p><a href="${verificationUrl}">Verify My Account</a></p>
+        <p>This link will expire in 24 hours.</p>
+        <br>
+        <p>If you did not request this, please ignore this email.</p>
+      `,
+    });
+
     if (this.configService.get('NODE_ENV') === 'development') {
       console.log('\n==================================');
       console.log('EMAIL VERIFICATION LINK:');
@@ -124,8 +139,7 @@ constructor(
     }
   }
 
-  async getGuestToken() 
-  {
+  async getGuestToken() {
     const guestId = uuidv4();
 
     const expiresAt = new Date();
