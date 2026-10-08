@@ -86,7 +86,8 @@ export class AdvertisementsService {
         const filePath = path.join(uploadDir, filename);
 
         await fs.promises.writeFile(filePath, file.buffer);
-        imageUrls.push(`http://localhost:3000/uploads/${filename}`);
+        const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`;
+        imageUrls.push(`${baseUrl}/uploads/${filename}`);
       }
     }
 
@@ -176,7 +177,8 @@ export class AdvertisementsService {
         const filePath = path.join(uploadDir, filename);
 
         await fs.promises.writeFile(filePath, file.buffer);
-        imageUrls.push(`http://localhost:3000/uploads/${filename}`);
+        const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`;
+        imageUrls.push(`${baseUrl}/uploads/${filename}`);
       }
     }
     ad.images = imageUrls.slice(0, 5); // limit to max 5
