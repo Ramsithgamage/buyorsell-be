@@ -59,8 +59,17 @@ describe('AdvertisementsService', () => {
         price: 999,
         categoryId: 1,
       };
-      const mockCategory = { id: 1, name: 'Phones', isActive: true } as Category;
-      const mockAd = { id: 1, ...dto, userId: 1, slug: 'iphone-15-123456' } as Advertisement;
+      const mockCategory = {
+        id: 1,
+        name: 'Phones',
+        isActive: true,
+      } as Category;
+      const mockAd = {
+        id: 1,
+        ...dto,
+        userId: 1,
+        slug: 'iphone-15-123456',
+      } as Advertisement;
 
       categoriesService.findById.mockResolvedValue(mockCategory);
       adRepository.create.mockReturnValue(mockAd);
@@ -78,7 +87,11 @@ describe('AdvertisementsService', () => {
         price: 999,
         categoryId: 1,
       };
-      const mockCategory = { id: 1, name: 'Phones', isActive: false } as Category;
+      const mockCategory = {
+        id: 1,
+        name: 'Phones',
+        isActive: false,
+      } as Category;
 
       categoriesService.findById.mockResolvedValue(mockCategory);
 
@@ -101,9 +114,18 @@ describe('AdvertisementsService', () => {
 
   describe('update', () => {
     it('should update an advertisement if the user owns it', async () => {
-      const mockAd = { id: 1, title: 'Old Title', userId: 1, categoryId: 1 } as Advertisement;
+      const mockAd = {
+        id: 1,
+        title: 'Old Title',
+        userId: 1,
+        categoryId: 1,
+      } as Advertisement;
       const dto = { title: 'New Title' };
-      const updatedAd = { ...mockAd, title: 'New Title', slug: 'new-title-123' };
+      const updatedAd = {
+        ...mockAd,
+        title: 'New Title',
+        slug: 'new-title-123',
+      };
 
       adRepository.findOne.mockResolvedValue(mockAd);
       adRepository.save.mockResolvedValue(updatedAd);
@@ -113,12 +135,19 @@ describe('AdvertisementsService', () => {
     });
 
     it('should throw ForbiddenException if user does not own the advertisement', async () => {
-      const mockAd = { id: 1, title: 'Old Title', userId: 2, categoryId: 1 } as Advertisement;
+      const mockAd = {
+        id: 1,
+        title: 'Old Title',
+        userId: 2,
+        categoryId: 1,
+      } as Advertisement;
       const dto = { title: 'New Title' };
 
       adRepository.findOne.mockResolvedValue(mockAd);
 
-      await expect(service.update(1, dto, 1)).rejects.toThrow(ForbiddenException);
+      await expect(service.update(1, dto, 1)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -128,7 +157,9 @@ describe('AdvertisementsService', () => {
       adRepository.findOne.mockResolvedValue(mockAd);
       adRepository.remove.mockResolvedValue(mockAd);
 
-      await expect(service.remove(1, { sub: 1, type: 'access' })).resolves.not.toThrow();
+      await expect(
+        service.remove(1, { sub: 1, type: 'access' }),
+      ).resolves.not.toThrow();
       expect(adRepository.remove).toHaveBeenCalledWith(mockAd);
     });
 
@@ -136,7 +167,9 @@ describe('AdvertisementsService', () => {
       const mockAd = { id: 1, userId: 2 } as Advertisement;
       adRepository.findOne.mockResolvedValue(mockAd);
 
-      await expect(service.remove(1, { sub: 1, type: 'access' })).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.remove(1, { sub: 1, type: 'access' }),
+      ).rejects.toThrow(ForbiddenException);
     });
 
     it('should remove an advertisement if user is an approved admin', async () => {
@@ -164,10 +197,14 @@ describe('AdvertisementsService', () => {
         price: 999,
         categoryId: 1,
       };
-      const mockCategory = { id: 1, name: 'Phones', isActive: true } as Category;
+      const mockCategory = {
+        id: 1,
+        name: 'Phones',
+        isActive: true,
+      } as Category;
       categoriesService.findById.mockResolvedValue(mockCategory);
       adRepository.create.mockReturnValue({} as any);
-      
+
       const dbError = new Error('foreign key constraint fails');
       (dbError as any).code = 'ER_NO_REFERENCED_ROW_2';
       adRepository.save.mockRejectedValue(dbError);

@@ -1,6 +1,4 @@
-import {
-  Injectable,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 
 import * as bcrypt from 'bcrypt';
@@ -35,19 +33,28 @@ export class AuthService {
     private readonly verificationService: VerificationService,
     private readonly tokenService: TokenService,
     private readonly mailerService: MailerService,
-
-  ) { }
+  ) {}
 
   async register(createUserDto: CreateUserDto) {
-    return this.registerUserWithRole(createUserDto, UserRole.USER, ApprovalStatus.APPROVED);
+    return this.registerUserWithRole(
+      createUserDto,
+      UserRole.USER,
+      ApprovalStatus.APPROVED,
+    );
   }
 
   async registerAdmin(createUserDto: CreateUserDto) {
-    return this.registerUserWithRole(createUserDto, UserRole.ADMIN, ApprovalStatus.PENDING);
+    return this.registerUserWithRole(
+      createUserDto,
+      UserRole.ADMIN,
+      ApprovalStatus.PENDING,
+    );
   }
 
   async registerVendor(registerVendorDto: RegisterVendorDto) {
-    const existingUser = await this.usersService.findByEmail(registerVendorDto.email);
+    const existingUser = await this.usersService.findByEmail(
+      registerVendorDto.email,
+    );
     if (existingUser) {
       throw new DuplicateEmailException();
     }
@@ -64,7 +71,8 @@ export class AuthService {
       },
       {
         companyName: registerVendorDto.companyName,
-        businessRegistrationNumber: registerVendorDto.businessRegistrationNumber,
+        businessRegistrationNumber:
+          registerVendorDto.businessRegistrationNumber,
       },
     );
 
@@ -80,7 +88,9 @@ export class AuthService {
     role: UserRole,
     approvalStatus: ApprovalStatus,
   ) {
-    const existingUser = await this.usersService.findByEmail(createUserDto.email);
+    const existingUser = await this.usersService.findByEmail(
+      createUserDto.email,
+    );
     if (existingUser) {
       throw new DuplicateEmailException();
     }
@@ -144,15 +154,9 @@ export class AuthService {
 
     const expiresAt = new Date();
 
-    expiresAt.setDate(
-      expiresAt.getDate() + 30,
-    );
+    expiresAt.setDate(expiresAt.getDate() + 30);
 
-    await this.guestSessionService
-      .createGuestSession(
-        guestId,
-        expiresAt,
-      );
+    await this.guestSessionService.createGuestSession(guestId, expiresAt);
 
     const token = await this.tokenService.generateGuestToken(guestId);
 
@@ -162,60 +166,42 @@ export class AuthService {
   }
 
   async refreshToken(user: User) {
-    const newAccessToken =
-      await this.tokenService.generateAccessToken(
-        user.id,
-        user.email,
-        user.role,
-        user.approvalStatus,
-      );
+    const newAccessToken = await this.tokenService.generateAccessToken(
+      user.id,
+      user.email,
+      user.role,
+      user.approvalStatus,
+    );
 
-    const newRefreshToken =
-      await this.tokenService.generateRefreshToken(
-        user.id,
-        user.email,
-        user.role,
-        user.approvalStatus,
-      );
+    const newRefreshToken = await this.tokenService.generateRefreshToken(
+      user.id,
+      user.email,
+      user.role,
+      user.approvalStatus,
+    );
 
-    const hashedRefreshToken =
-      await bcrypt.hash(
-        newRefreshToken,
-        10,
-      );
+    const hashedRefreshToken = await bcrypt.hash(newRefreshToken, 10);
 
-    await this.usersService
-      .updateRefreshToken(
-        user.id,
-        hashedRefreshToken,
-      );
+    await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
 
     return {
-      accessToken:
-        newAccessToken,
+      accessToken: newAccessToken,
 
-      refreshToken:
-        newRefreshToken,
+      refreshToken: newRefreshToken,
     };
   }
 
-  async login(
-    loginDto: LoginDto,
-  ) {
-    const user =
-      await this.usersService.findByEmail(
-        loginDto.email,
-      );
+  async login(loginDto: LoginDto) {
+    const user = await this.usersService.findByEmail(loginDto.email);
 
     if (!user) {
       throw new InvalidCredentialsException();
     }
 
-    const passwordMatches =
-      await bcrypt.compare(
-        loginDto.password,
-        user.password,
-      );
+    const passwordMatches = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
 
     if (!passwordMatches) {
       throw new InvalidCredentialsException();
@@ -225,33 +211,23 @@ export class AuthService {
       throw new EmailNotVerifiedException();
     }
 
-    const accessToken =
-      await this.tokenService.generateAccessToken(
-        user.id,
-        user.email,
-        user.role,
-        user.approvalStatus,
-      );
+    const accessToken = await this.tokenService.generateAccessToken(
+      user.id,
+      user.email,
+      user.role,
+      user.approvalStatus,
+    );
 
-    const refreshToken =
-      await this.tokenService.generateRefreshToken(
-        user.id,
-        user.email,
-        user.role,
-        user.approvalStatus,
-      );
+    const refreshToken = await this.tokenService.generateRefreshToken(
+      user.id,
+      user.email,
+      user.role,
+      user.approvalStatus,
+    );
 
-    const hashedRefreshToken =
-      await bcrypt.hash(
-        refreshToken,
-        10,
-      );
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
 
-    await this.usersService
-      .updateRefreshToken(
-        user.id,
-        hashedRefreshToken,
-      );
+    await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
 
     return {
       user: {
@@ -267,24 +243,15 @@ export class AuthService {
     };
   }
 
-  async verifyEmail(
-    token: string,
-  ) {
-    return this.verificationService
-      .verifyEmail(token);
+  async verifyEmail(token: string) {
+    return this.verificationService.verifyEmail(token);
   }
 
-  async logout(
-    userId: number,
-  ) {
-    await this.usersService.updateRefreshToken(
-      userId,
-      null,
-    );
+  async logout(userId: number) {
+    await this.usersService.updateRefreshToken(userId, null);
 
     return {
       message: 'Logout successful',
     };
   }
-
 }

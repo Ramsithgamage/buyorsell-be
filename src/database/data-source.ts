@@ -8,8 +8,14 @@ import { Category } from '../categories/entities/category.entity';
 import { Advertisement } from '../advertisements/entities/advertisement.entity';
 import { AdvertisementArchive } from '../advertisements/entities/advertisement-archive.entity';
 import { ApiLog } from '../api-log/entities/api-log.entity';
+import { PromotionalAd } from '../promotional-ads/entities/promotional-ad.entity';
 
 dotenv.config();
+
+const isSsl =
+  process.env.NODE_ENV === 'production' ||
+  process.env.DB_SSL === 'true' ||
+  Boolean(process.env.DB_HOST && process.env.DB_HOST.includes('aivencloud'));
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -18,8 +24,18 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  entities: [User, VendorProfile, VerificationToken, GuestSession, Category, Advertisement, AdvertisementArchive, ApiLog],
+  ssl: isSsl ? { rejectUnauthorized: false } : false,
+  entities: [
+    User,
+    VendorProfile,
+    VerificationToken,
+    GuestSession,
+    Category,
+    Advertisement,
+    AdvertisementArchive,
+    ApiLog,
+    PromotionalAd,
+  ],
   migrations: [__dirname + '/migrations/*.ts'],
   synchronize: false,
 });

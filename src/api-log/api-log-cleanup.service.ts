@@ -28,7 +28,10 @@ export class ApiLogCleanupService {
         `Successfully deleted ${deleteResult.affected || 0} API logs older than 7 days (before ${sevenDaysAgo.toISOString()}).`,
       );
     } catch (error) {
-      this.logger.error('Failed to execute API logs cleanup job', error instanceof Error ? error.stack : error);
+      this.logger.error(
+        'Failed to execute API logs cleanup job',
+        error instanceof Error ? error.stack : error,
+      );
     }
   }
 }

@@ -34,16 +34,20 @@ export class ApiLogInterceptor implements NestInterceptor {
       catchError((err) => {
         const durationMs = Math.round(performance.now() - startTime);
         const statusCode = err.status || err.statusCode || 500;
-        
+
         let errorMessage = 'Internal server error';
         if (err instanceof Error) {
           errorMessage = err.message;
         } else if (typeof err === 'string') {
           errorMessage = err;
         } else if (err && typeof err === 'object') {
-          const resMessage = err.message || (err.response && (err.response.message || err.response));
+          const resMessage =
+            err.message ||
+            (err.response && (err.response.message || err.response));
           if (resMessage) {
-            errorMessage = Array.isArray(resMessage) ? resMessage.join(', ') : String(resMessage);
+            errorMessage = Array.isArray(resMessage)
+              ? resMessage.join(', ')
+              : String(resMessage);
           }
         }
 
@@ -81,10 +85,16 @@ export class ApiLogInterceptor implements NestInterceptor {
       });
 
       this.logRepository.save(apiLog).catch((err) => {
-        this.consoleLogger.error('Failed to save API log to database', err instanceof Error ? err.stack : err);
+        this.consoleLogger.error(
+          'Failed to save API log to database',
+          err instanceof Error ? err.stack : err,
+        );
       });
     } catch (err) {
-      this.consoleLogger.error('Error constructing or initiating API log save', err instanceof Error ? err.stack : err);
+      this.consoleLogger.error(
+        'Error constructing or initiating API log save',
+        err instanceof Error ? err.stack : err,
+      );
     }
   }
 
@@ -94,10 +104,19 @@ export class ApiLogInterceptor implements NestInterceptor {
       const cloned = JSON.parse(JSON.stringify(data));
       const mask = (obj: any) => {
         if (typeof obj !== 'object' || obj === null) return;
-        const sensitiveKeys = ['password', 'token', 'accessToken', 'refreshToken'];
+        const sensitiveKeys = [
+          'password',
+          'token',
+          'accessToken',
+          'refreshToken',
+        ];
         for (const key in obj) {
           if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            if (sensitiveKeys.some(sk => key.toLowerCase().includes(sk.toLowerCase()))) {
+            if (
+              sensitiveKeys.some((sk) =>
+                key.toLowerCase().includes(sk.toLowerCase()),
+              )
+            ) {
               obj[key] = '********';
             } else if (typeof obj[key] === 'object') {
               mask(obj[key]);

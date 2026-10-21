@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Get,
-  UseGuards,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Post, Get, UseGuards, Query } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
@@ -33,9 +26,7 @@ import { ErrorResponseDto } from '../common/dto/error-response.dto';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Get('verify')
   @Throttle({ default: { limit: 5, ttl: 3600 } })
@@ -67,7 +58,9 @@ export class AuthController {
   @UseGuards(GuestTokenGuard)
   @Throttle({ default: { limit: 5, ttl: 3600 } })
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Register a new user account (Requires Guest Token)' })
+  @ApiOperation({
+    summary: 'Register a new user account (Requires Guest Token)',
+  })
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({
     status: 201,
@@ -98,7 +91,9 @@ export class AuthController {
   @UseGuards(GuestTokenGuard)
   @Throttle({ default: { limit: 5, ttl: 3600 } })
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Register a new vendor account (Requires Guest Token)' })
+  @ApiOperation({
+    summary: 'Register a new vendor account (Requires Guest Token)',
+  })
   @ApiBody({ type: RegisterVendorDto })
   @ApiResponse({
     status: 201,
@@ -129,7 +124,9 @@ export class AuthController {
   @UseGuards(GuestTokenGuard)
   @Throttle({ default: { limit: 5, ttl: 3600 } })
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Register a new admin request (Requires Guest Token)' })
+  @ApiOperation({
+    summary: 'Register a new admin request (Requires Guest Token)',
+  })
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({
     status: 201,
@@ -160,7 +157,10 @@ export class AuthController {
   @UseGuards(GuestTokenGuard)
   @Throttle({ default: { limit: 5, ttl: 3600 } })
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Authenticate a user and return access & refresh tokens (Requires Guest Token)' })
+  @ApiOperation({
+    summary:
+      'Authenticate a user and return access & refresh tokens (Requires Guest Token)',
+  })
   @ApiBody({ type: LoginDto })
   @ApiResponse({
     status: 201,

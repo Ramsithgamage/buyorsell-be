@@ -150,7 +150,7 @@ export class DashboardService {
     if (isActive !== undefined) {
       where.isActive = isActive;
     }
-    
+
     const [data, totalItems] = await this.adRepository.findAndCount({
       where,
       order: { createdAt: 'DESC' },

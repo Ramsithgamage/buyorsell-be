@@ -18,7 +18,9 @@ export class TokenService {
     };
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('GUEST_TOKEN_SECRET'),
-      expiresIn: this.configService.get<string>('GUEST_TOKEN_EXPIRES_IN') as any,
+      expiresIn: this.configService.get<string>(
+        'GUEST_TOKEN_EXPIRES_IN',
+      ) as any,
     });
   }
 
@@ -56,7 +58,9 @@ export class TokenService {
     };
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
-      expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') as any,
+      expiresIn: this.configService.get<string>(
+        'JWT_REFRESH_EXPIRES_IN',
+      ) as any,
     });
   }
 }

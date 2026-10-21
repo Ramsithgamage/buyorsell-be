@@ -7,23 +7,14 @@ import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 @Injectable()
-export class JwtAccessStrategy extends PassportStrategy(
-  Strategy,
-  'jwt',
-) {
-  constructor(
-    private configService: ConfigService,
-  ) {
+export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt') {
+  constructor(private configService: ConfigService) {
     super({
-      jwtFromRequest:
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 
       ignoreExpiration: false,
 
-      secretOrKey:
-        configService.get<string>(
-          'JWT_ACCESS_SECRET',
-        )!,
+      secretOrKey: configService.get<string>('JWT_ACCESS_SECRET')!,
     });
   }
 

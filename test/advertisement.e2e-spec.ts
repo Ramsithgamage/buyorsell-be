@@ -55,10 +55,18 @@ describe('Advertisements Flow (e2e)', () => {
 
     await app.init();
 
-    userRepository = moduleFixture.get<Repository<User>>(getRepositoryToken(User));
-    categoryRepository = moduleFixture.get<Repository<Category>>(getRepositoryToken(Category));
-    advertisementRepository = moduleFixture.get<Repository<Advertisement>>(getRepositoryToken(Advertisement));
-    guestSessionRepository = moduleFixture.get<Repository<GuestSession>>(getRepositoryToken(GuestSession));
+    userRepository = moduleFixture.get<Repository<User>>(
+      getRepositoryToken(User),
+    );
+    categoryRepository = moduleFixture.get<Repository<Category>>(
+      getRepositoryToken(Category),
+    );
+    advertisementRepository = moduleFixture.get<Repository<Advertisement>>(
+      getRepositoryToken(Advertisement),
+    );
+    guestSessionRepository = moduleFixture.get<Repository<GuestSession>>(
+      getRepositoryToken(GuestSession),
+    );
 
     // Clear existing data for isolation
     await advertisementRepository.createQueryBuilder().delete().execute();
@@ -85,7 +93,9 @@ describe('Advertisements Flow (e2e)', () => {
 
     // Login users to get JWT tokens (requires a guest token first)
     await guestSessionRepository.createQueryBuilder().delete().execute();
-    const tokenRes1 = await request(app.getHttpServer()).post('/get_token').expect(201);
+    const tokenRes1 = await request(app.getHttpServer())
+      .post('/get_token')
+      .expect(201);
     const guestToken1 = tokenRes1.body.guestToken;
     const login1 = await request(app.getHttpServer())
       .post('/auth/login')
@@ -97,7 +107,9 @@ describe('Advertisements Flow (e2e)', () => {
     // Delete session 1 so we can get tokenRes2 without duplicate key error on static mocked UUID
     await guestSessionRepository.createQueryBuilder().delete().execute();
 
-    const tokenRes2 = await request(app.getHttpServer()).post('/get_token').expect(201);
+    const tokenRes2 = await request(app.getHttpServer())
+      .post('/get_token')
+      .expect(201);
     const guestToken2 = tokenRes2.body.guestToken;
     const login2 = await request(app.getHttpServer())
       .post('/auth/login')
@@ -108,12 +120,20 @@ describe('Advertisements Flow (e2e)', () => {
 
     // Create an active and inactive category in DB
     const activeCat = await categoryRepository.save(
-      categoryRepository.create({ name: 'Active Electronics', slug: 'active-electronics', isActive: true }),
+      categoryRepository.create({
+        name: 'Active Electronics',
+        slug: 'active-electronics',
+        isActive: true,
+      }),
     );
     activeCategoryId = activeCat.id;
 
     const inactiveCat = await categoryRepository.save(
-      categoryRepository.create({ name: 'Inactive Books', slug: 'inactive-books', isActive: false }),
+      categoryRepository.create({
+        name: 'Inactive Books',
+        slug: 'inactive-books',
+        isActive: false,
+      }),
     );
     inactiveCategoryId = inactiveCat.id;
   });
@@ -133,7 +153,10 @@ describe('Advertisements Flow (e2e)', () => {
         description: 'Brand new MacBook Pro M3 with 16GB RAM',
         price: 1999.99,
         categoryId: activeCategoryId,
-        images: ['https://example.com/mac1.jpg', 'https://example.com/mac2.jpg'],
+        images: [
+          'https://example.com/mac1.jpg',
+          'https://example.com/mac2.jpg',
+        ],
       };
 
       const res = await request(app.getHttpServer())
@@ -227,7 +250,9 @@ describe('Advertisements Flow (e2e)', () => {
         .expect(200);
 
       expect(Array.isArray(res.body)).toBe(true);
-      expect(res.body.every((ad: any) => ad.categoryId === activeCategoryId)).toBe(true);
+      expect(
+        res.body.every((ad: any) => ad.categoryId === activeCategoryId),
+      ).toBe(true);
     });
   });
 
@@ -236,17 +261,17 @@ describe('Advertisements Flow (e2e)', () => {
       const res = await request(app.getHttpServer())
         .patch(`/advertisements/${advertisementId}`)
         .set('Authorization', `Bearer ${user1Token}`)
-        .send({ price: 1850.00 })
+        .send({ price: 1850.0 })
         .expect(200);
 
-      expect(parseFloat(res.body.price)).toBe(1850.00);
+      expect(parseFloat(res.body.price)).toBe(1850.0);
     });
 
     it('should reject update attempts by a non-owner with 403 Forbidden', async () => {
       const res = await request(app.getHttpServer())
         .patch(`/advertisements/${advertisementId}`)
         .set('Authorization', `Bearer ${user2Token}`)
-        .send({ price: 1000.00 })
+        .send({ price: 1000.0 })
         .expect(403);
 
       expect(res.body.success).toBe(false);

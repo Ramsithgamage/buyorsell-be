@@ -30,40 +30,30 @@ export class UsersService {
         id,
       },
     });
-}
+  }
 
   async create(userData: Partial<User>) {
-    const user =
-      this.userRepository.create(userData);
+    const user = this.userRepository.create(userData);
 
     return this.userRepository.save(user);
   }
 
-  async updateStatus(
-    userId: number,
-    status: UserStatus,
-  ) {
-    await this.userRepository.update(
-      userId,
-      { status },
-    );
+  async updateStatus(userId: number, status: UserStatus) {
+    await this.userRepository.update(userId, { status });
   }
 
-  async updateRefreshToken(
-    userId: number,
-    refreshToken: any,
-  ) {
-    await this.userRepository.update(
-      userId,
-      {
-        refreshToken,
-      },
-    );
+  async updateRefreshToken(userId: number, refreshToken: any) {
+    await this.userRepository.update(userId, {
+      refreshToken,
+    });
   }
 
   async createVendor(
     userData: Partial<User>,
-    vendorProfileData: { companyName: string; businessRegistrationNumber: string },
+    vendorProfileData: {
+      companyName: string;
+      businessRegistrationNumber: string;
+    },
   ) {
     const user = this.userRepository.create({
       ...userData,
@@ -73,17 +63,15 @@ export class UsersService {
 
     const vendorProfile = new VendorProfile();
     vendorProfile.companyName = vendorProfileData.companyName;
-    vendorProfile.businessRegistrationNumber = vendorProfileData.businessRegistrationNumber;
+    vendorProfile.businessRegistrationNumber =
+      vendorProfileData.businessRegistrationNumber;
 
     user.vendorProfile = vendorProfile;
 
     return this.userRepository.save(user);
   }
 
-  async updateApprovalStatus(
-    userId: number,
-    approvalStatus: ApprovalStatus,
-  ) {
+  async updateApprovalStatus(userId: number, approvalStatus: ApprovalStatus) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
       throw new UserNotFoundException();

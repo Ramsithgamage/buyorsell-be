@@ -5,12 +5,7 @@ import { VerificationService } from './verification.service';
 import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [
-    UsersModule,
-    TypeOrmModule.forFeature([
-      VerificationToken,
-    ]),
-  ],
+  imports: [UsersModule, TypeOrmModule.forFeature([VerificationToken])],
   providers: [VerificationService],
   exports: [VerificationService],
 })

@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -49,13 +44,13 @@ export class DashboardController {
   @ApiBearerAuth()
   @ApiOperation({
     summary:
-      'Get paginated list of the authenticated user\'s own ads (all statuses)',
+      "Get paginated list of the authenticated user's own ads (all statuses)",
   })
   @ApiQuery({ name: 'page', required: false, type: Number, example: 1 })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiResponse({
     status: 200,
-    description: 'Paginated list of the current user\'s advertisements',
+    description: "Paginated list of the current user's advertisements",
   })
   @ApiResponse({ status: 401, description: 'Missing or invalid JWT token' })
   getMyAds(

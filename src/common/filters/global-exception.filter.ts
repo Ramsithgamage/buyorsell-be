@@ -27,7 +27,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
         const resMessage = (exceptionResponse as any).message;
         if (resMessage) {
-          message = Array.isArray(resMessage) ? resMessage.join(', ') : String(resMessage);
+          message = Array.isArray(resMessage)
+            ? resMessage.join(', ')
+            : String(resMessage);
         } else {
           message = exception.message;
         }

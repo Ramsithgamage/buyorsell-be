@@ -16,7 +16,7 @@ export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
-  ) { }
+  ) {}
 
   /**
    * Helper to resolve/generate a slug for a category name
@@ -91,13 +91,16 @@ export class CategoriesService {
 
     // 3. Determine and check slug uniqueness if name or slug is changing
     if (dto.name || dto.slug) {
-      const targetSlug = dto.slug || (dto.name ? this.generateSlug(dto.name) : category.slug);
+      const targetSlug =
+        dto.slug || (dto.name ? this.generateSlug(dto.name) : category.slug);
       if (targetSlug !== category.slug) {
         const existingSlug = await this.categoryRepository.findOne({
           where: { slug: targetSlug, id: Not(id) },
         });
         if (existingSlug) {
-          throw new ConflictException('Category with this slug already exists.');
+          throw new ConflictException(
+            'Category with this slug already exists.',
+          );
         }
         category.slug = targetSlug;
       }
@@ -138,7 +141,9 @@ export class CategoriesService {
             where: { id: currentParentId },
           });
           if (!parentCat) {
-            throw new NotFoundException('Parent category not found in the ancestor chain.');
+            throw new NotFoundException(
+              'Parent category not found in the ancestor chain.',
+            );
           }
           currentParentId = parentCat.parentId;
         }
@@ -185,7 +190,9 @@ export class CategoriesService {
   /**
    * Private recursive helper to deactivate a category and all its descendants.
    */
-  private async deactivateCategoryAndDescendants(categoryId: number): Promise<void> {
+  private async deactivateCategoryAndDescendants(
+    categoryId: number,
+  ): Promise<void> {
     // 1. Perform an update statement to set isActive = false on the current categoryId
     await this.categoryRepository.update(categoryId, { isActive: false });
 

@@ -6,20 +6,15 @@ import { JwtPayload } from '../interfaces/jwt-payload.interface';
 import { GuestSessionService } from '../../guest-session/guest-session.service';
 
 @Injectable()
-export class JwtGuestStrategy extends PassportStrategy(
-  Strategy,
-  'jwt-guest',
-) {
+export class JwtGuestStrategy extends PassportStrategy(Strategy, 'jwt-guest') {
   constructor(
     private readonly configService: ConfigService,
     private readonly guestSessionService: GuestSessionService,
   ) {
     super({
-      jwtFromRequest:
-        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey:
-        configService.get<string>('GUEST_TOKEN_SECRET')!,
+      secretOrKey: configService.get<string>('GUEST_TOKEN_SECRET')!,
     });
   }
 
@@ -31,9 +26,13 @@ export class JwtGuestStrategy extends PassportStrategy(
       throw new UnauthorizedException('Guest token is required');
     }
 
-    const session = await this.guestSessionService.findByGuestId(payload.guestId);
+    const session = await this.guestSessionService.findByGuestId(
+      payload.guestId,
+    );
     if (!session) {
-      throw new UnauthorizedException('Guest session has expired or is invalid');
+      throw new UnauthorizedException(
+        'Guest session has expired or is invalid',
+      );
     }
 
     return payload;

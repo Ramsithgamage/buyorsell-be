@@ -16,7 +16,7 @@ import { ErrorResponseDto } from './common/dto/error-response.dto';
 import { UserNotFoundException } from './common/exceptions';
 
 @ApiTags('Core')
-@Controller() 
+@Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,

@@ -66,12 +66,16 @@ describe('AdvertisementsController', () => {
       const query: GetAdvertisementsDto = { page: 1, limit: 10 };
       const result = await controller.findAll(query);
       expect(result).toEqual(cachedData);
-      expect(cacheManager.get).toHaveBeenCalledWith('advertisements_list_p_1_l_10');
+      expect(cacheManager.get).toHaveBeenCalledWith(
+        'advertisements_list_p_1_l_10',
+      );
       expect(service.findAll).not.toHaveBeenCalled();
     });
 
     it('should query service and set cache if not cached', async () => {
-      const freshData = [{ id: 1, title: 'Ad 1', price: 100, slug: 'ad-1' }] as Advertisement[];
+      const freshData = [
+        { id: 1, title: 'Ad 1', price: 100, slug: 'ad-1' },
+      ] as Advertisement[];
       cacheManager.get.mockResolvedValue(null);
       service.findAll.mockResolvedValue({ data: freshData, total: 1 });
 
@@ -79,15 +83,28 @@ describe('AdvertisementsController', () => {
       const result = await controller.findAll(query);
       expect(result.data).toHaveLength(1);
       expect(result.data[0].title).toBe('Ad 1');
-      expect(cacheManager.set).toHaveBeenCalledWith('advertisements_list_p_1_l_10', expect.any(Object));
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        'advertisements_list_p_1_l_10',
+        expect.any(Object),
+      );
     });
   });
 
   describe('create', () => {
     it('should create an advertisement and evict cache', async () => {
-      const dto = { title: 'New Ad', description: 'desc', price: 50, categoryId: 1 } as CreateAdDto;
+      const dto = {
+        title: 'New Ad',
+        description: 'desc',
+        price: 50,
+        categoryId: 1,
+      } as CreateAdDto;
       const user = { sub: 1 } as JwtPayload;
-      const mockResult = { id: 1, ...dto, userId: 1, slug: 'new-ad-123' } as Advertisement;
+      const mockResult = {
+        id: 1,
+        ...dto,
+        userId: 1,
+        slug: 'new-ad-123',
+      } as Advertisement;
 
       service.create.mockResolvedValue(mockResult);
 
@@ -102,7 +119,12 @@ describe('AdvertisementsController', () => {
     it('should update an advertisement and evict cache', async () => {
       const dto = { title: 'Updated Ad' } as UpdateAdDto;
       const user = { sub: 1 } as JwtPayload;
-      const mockResult = { id: 1, title: 'Updated Ad', userId: 1, slug: 'updated-ad-123' } as Advertisement;
+      const mockResult = {
+        id: 1,
+        title: 'Updated Ad',
+        userId: 1,
+        slug: 'updated-ad-123',
+      } as Advertisement;
 
       service.update.mockResolvedValue(mockResult);
 

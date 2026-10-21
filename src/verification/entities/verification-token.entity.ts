@@ -27,12 +27,9 @@ export class VerificationToken {
   @Index()
   expiresAt!: Date;
 
-  @ManyToOne(
-    () => User,
-    {
-      onDelete: 'CASCADE',
-    },
-  )
+  @ManyToOne(() => User, {
+    onDelete: 'CASCADE',
+  })
   user!: User;
 
   @CreateDateColumn({

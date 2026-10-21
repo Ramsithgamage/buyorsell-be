@@ -6,11 +6,7 @@ import { GuestSession } from './entities/guest-session.entity';
 import { GuestSessionService } from './guest-session.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      GuestSession,
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([GuestSession])],
   providers: [GuestSessionService],
   exports: [GuestSessionService],
 })

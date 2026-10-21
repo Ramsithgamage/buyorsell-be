@@ -51,7 +51,7 @@ export class AdvertisementsController {
   constructor(
     private readonly adsService: AdvertisementsService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-  ) { }
+  ) {}
 
   private getCacheKey(query: GetAdvertisementsDto): string {
     const catPart = query.categoryId ? `_cat_${query.categoryId}` : '';
@@ -66,11 +66,16 @@ export class AdvertisementsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all active advertisements with offset pagination' })
+  @ApiOperation({
+    summary: 'Get all active advertisements with offset pagination',
+  })
   @ApiResponse({ status: 200, type: PaginatedAdResponseDto })
-  async findAll(@Query() query: GetAdvertisementsDto): Promise<PaginatedAdResponseDto> {
+  async findAll(
+    @Query() query: GetAdvertisementsDto,
+  ): Promise<PaginatedAdResponseDto> {
     const cacheKey = this.getCacheKey(query);
-    const cached = await this.cacheManager.get<PaginatedAdResponseDto>(cacheKey);
+    const cached =
+      await this.cacheManager.get<PaginatedAdResponseDto>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -134,8 +139,16 @@ export class AdvertisementsController {
     @CurrentUser() user: JwtPayload,
     @UploadedFiles() files: Express.Multer.File[],
   ): Promise<AdResponseDto> {
-    const isAdminOverride = user.role === UserRole.ADMIN && user.approvalStatus === ApprovalStatus.APPROVED;
-    const ad = await this.adsService.update(id, updateDto, user.sub!, files, isAdminOverride);
+    const isAdminOverride =
+      user.role === UserRole.ADMIN &&
+      user.approvalStatus === ApprovalStatus.APPROVED;
+    const ad = await this.adsService.update(
+      id,
+      updateDto,
+      user.sub!,
+      files,
+      isAdminOverride,
+    );
     await this.evictCache();
     return plainToInstance(AdResponseDto, ad);
   }
@@ -145,7 +158,9 @@ export class AdvertisementsController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiParam({ name: 'id', type: Number })
-  @ApiOperation({ summary: 'Delete advertisement (Owner or ADMIN role required)' })
+  @ApiOperation({
+    summary: 'Delete advertisement (Owner or ADMIN role required)',
+  })
   @ApiResponse({ status: 204, description: 'No content' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   async remove(

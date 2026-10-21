@@ -3,46 +3,38 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UsersService } from '../users/users.service';
 import { VerificationToken } from './entities/verification-token.entity';
-import { InvalidTokenException, TokenExpiredException } from '../common/exceptions';
+import {
+  InvalidTokenException,
+  TokenExpiredException,
+} from '../common/exceptions';
 import { UserStatus } from '../common/enums/user-status.enum';
 
 @Injectable()
 export class VerificationService {
   constructor(
-    @InjectRepository(
-      VerificationToken,
-    )
-    private verificationRepository:
-      Repository<VerificationToken>,
+    @InjectRepository(VerificationToken)
+    private verificationRepository: Repository<VerificationToken>,
 
-    private readonly usersService:
-      UsersService,
+    private readonly usersService: UsersService,
   ) {}
 
-  async createToken(
-    token: string,
-    user: any,
-    expiresAt: Date,
-  ) {
+  async createToken(token: string, user: any, expiresAt: Date) {
     // Delete any existing verification tokens for the user to prevent duplicates
     await this.verificationRepository.delete({ user: { id: user.id } });
 
-    const verificationToken =
-      this.verificationRepository.create({
-        token,
-        user,
-        expiresAt,
-      });
+    const verificationToken = this.verificationRepository.create({
+      token,
+      user,
+      expiresAt,
+    });
 
-    return this.verificationRepository.save(
-      verificationToken,
-    );
+    return this.verificationRepository.save(verificationToken);
   }
 
   async findByToken(token: string) {
     return this.verificationRepository.findOne({
       where: { token },
-      relations: {user: true},
+      relations: { user: true },
     });
   }
 
@@ -51,13 +43,10 @@ export class VerificationService {
   }
 
   async verifyEmail(token: string) {
-    const verificationToken =
-      await this.findByToken(token);
+    const verificationToken = await this.findByToken(token);
 
     if (!verificationToken) {
-      throw new InvalidTokenException(
-        'Invalid verification token',
-      );
+      throw new InvalidTokenException('Invalid verification token');
     }
 
     if (!verificationToken.user) {
@@ -68,16 +57,12 @@ export class VerificationService {
 
     if (verificationToken.user.status === UserStatus.VERIFIED) {
       await this.deleteToken(verificationToken.id);
-      throw new BadRequestException(
-        'Email is already verified',
-      );
+      throw new BadRequestException('Email is already verified');
     }
 
     const now = new Date();
 
-    if (
-      verificationToken.expiresAt < now
-    ) {
+    if (verificationToken.expiresAt < now) {
       throw new TokenExpiredException();
     }
 
@@ -86,14 +71,10 @@ export class VerificationService {
       UserStatus.VERIFIED,
     );
 
-    await this.deleteToken(
-      verificationToken.id,
-    );
+    await this.deleteToken(verificationToken.id);
 
     return {
-      message:
-        'Email verified successfully',
+      message: 'Email verified successfully',
     };
   }
-
 }

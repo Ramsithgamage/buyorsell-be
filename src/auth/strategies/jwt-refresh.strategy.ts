@@ -19,8 +19,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     super({
       jwtFromRequest: ExtractJwt.fromBodyField('refreshToken'),
       ignoreExpiration: false,
-      secretOrKey:
-        configService.get<string>('JWT_REFRESH_SECRET')!,
+      secretOrKey: configService.get<string>('JWT_REFRESH_SECRET')!,
       passReqToCallback: true,
     });
   }
@@ -43,10 +42,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const tokenMatches = await bcrypt.compare(
-      refreshToken,
-      user.refreshToken,
-    );
+    const tokenMatches = await bcrypt.compare(refreshToken, user.refreshToken);
 
     if (!tokenMatches) {
       throw new UnauthorizedException('Invalid refresh token');

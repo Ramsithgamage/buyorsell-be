@@ -11,28 +11,21 @@ export class GuestSessionService {
     private guestRepository: Repository<GuestSession>,
   ) {}
 
-  async createGuestSession(
-    guestId: string,
-    expiresAt: Date,
-  ) {
-    const session =
-      this.guestRepository.create({
-        guestId,
-        expiresAt,
-      });
+  async createGuestSession(guestId: string, expiresAt: Date) {
+    const session = this.guestRepository.create({
+      guestId,
+      expiresAt,
+    });
 
     return this.guestRepository.save(session);
   }
 
-  async findByGuestId(
-    guestId: string,
-  ) {
-    const session =
-      await this.guestRepository.findOne({
-        where: {
-          guestId,
-        },
-      });
+  async findByGuestId(guestId: string) {
+    const session = await this.guestRepository.findOne({
+      where: {
+        guestId,
+      },
+    });
 
     if (!session) {
       return null;

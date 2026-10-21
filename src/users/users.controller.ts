@@ -33,8 +33,14 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  @ApiParam({ name: 'id', description: 'The unique ID of the user whose status needs to be updated', type: Number })
-  @ApiOperation({ summary: 'Update registration approval status (Requires ADMIN role)' })
+  @ApiParam({
+    name: 'id',
+    description: 'The unique ID of the user whose status needs to be updated',
+    type: Number,
+  })
+  @ApiOperation({
+    summary: 'Update registration approval status (Requires ADMIN role)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Approval status successfully updated',
@@ -52,7 +58,8 @@ export class UsersController {
   @ApiResponse({
     status: 403,
     type: ErrorResponseDto,
-    description: 'Authenticated user lacks required ADMIN role or approval status',
+    description:
+      'Authenticated user lacks required ADMIN role or approval status',
   })
   @ApiResponse({
     status: 404,
@@ -63,7 +70,10 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateApprovalStatusDto: UpdateApprovalStatusDto,
   ) {
-    await this.usersService.updateApprovalStatus(id, updateApprovalStatusDto.status);
+    await this.usersService.updateApprovalStatus(
+      id,
+      updateApprovalStatusDto.status,
+    );
     return {
       message: 'User status successfully updated',
     };

@@ -15,6 +15,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { AdvertisementsModule } from './advertisements/advertisements.module';
 import { ApiLogModule } from './api-log/api-log.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { PromotionalAdsModule } from './promotional-ads/promotional-ads.module';
 
 @Module({
   imports: [
@@ -68,7 +69,12 @@ import { DashboardModule } from './dashboard/dashboard.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        ssl: configService.get<string>('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
+        ssl:
+          configService.get<string>('NODE_ENV') === 'production' ||
+          configService.get<string>('DB_SSL') === 'true' ||
+          Boolean(configService.get<string>('DB_HOST')?.includes('aivencloud'))
+            ? { rejectUnauthorized: false }
+            : false,
         autoLoadEntities: true,
         synchronize: false,
       }),
@@ -82,8 +88,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
     AdvertisementsModule,
     ApiLogModule,
     DashboardModule,
+    PromotionalAdsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

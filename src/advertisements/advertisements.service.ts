@@ -31,7 +31,7 @@ export class AdvertisementsService {
     private readonly adRepository: Repository<Advertisement>,
     private readonly categoriesService: CategoriesService,
     private readonly dataSource: DataSource,
-  ) { }
+  ) {}
 
   /**
    * Helper to generate unique SEO slugs
@@ -44,7 +44,11 @@ export class AdvertisementsService {
   /**
    * Helper to isolate ownership checks (allows easy Admin Override injection in the future)
    */
-  public verifyOwnership(ad: Advertisement, userId: number, isAdminOverride = false): void {
+  public verifyOwnership(
+    ad: Advertisement,
+    userId: number,
+    isAdminOverride = false,
+  ): void {
     if (isAdminOverride) return;
     if (ad.userId !== userId) {
       throw new ForbiddenException('You do not own this advertisement.');
@@ -55,23 +59,39 @@ export class AdvertisementsService {
    * Helper to handle and translate DB errors into proper NestJS HTTP Exceptions
    */
   private handleDbError(error: any): never {
-    if (error.code === 'ER_NO_REFERENCED_ROW_2' || error.message?.includes('foreign key constraint fails')) {
-      throw new NotFoundException('Referenced Category or User does not exist.');
+    if (
+      error.code === 'ER_NO_REFERENCED_ROW_2' ||
+      error.message?.includes('foreign key constraint fails')
+    ) {
+      throw new NotFoundException(
+        'Referenced Category or User does not exist.',
+      );
     }
-    if (error.code === 'ER_ROW_IS_REFERENCED_2' || error.message?.includes('cannot be deleted or updated')) {
-      throw new ConflictException('Cannot perform operation due to foreign key references.');
+    if (
+      error.code === 'ER_ROW_IS_REFERENCED_2' ||
+      error.message?.includes('cannot be deleted or updated')
+    ) {
+      throw new ConflictException(
+        'Cannot perform operation due to foreign key references.',
+      );
     }
     throw error;
   }
 
-  async create(dto: CreateAdDto, userId: number, files?: Express.Multer.File[]): Promise<Advertisement> {
+  async create(
+    dto: CreateAdDto,
+    userId: number,
+    files?: Express.Multer.File[],
+  ): Promise<Advertisement> {
     // Validate Category exists and is active
     const category = await this.categoriesService.findById(dto.categoryId);
     if (!category.isActive) {
-      throw new BadRequestException('Advertisements cannot be placed under inactive categories.');
+      throw new BadRequestException(
+        'Advertisements cannot be placed under inactive categories.',
+      );
     }
 
-    let imageUrls: string[] = dto.images || [];
+    const imageUrls: string[] = dto.images || [];
 
     if (files && files.length > 0) {
       const uploadDir = path.join(process.cwd(), 'public', 'uploads');
@@ -86,7 +106,9 @@ export class AdvertisementsService {
         const filePath = path.join(uploadDir, filename);
 
         await fs.promises.writeFile(filePath, file.buffer);
-        const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`;
+        const baseUrl =
+          process.env.BACKEND_URL ||
+          `http://localhost:${process.env.PORT || 3000}`;
         imageUrls.push(`${baseUrl}/uploads/${filename}`);
       }
     }
@@ -106,18 +128,23 @@ export class AdvertisementsService {
     }
   }
 
-  async findAll(dto: GetAdvertisementsDto): Promise<{ data: Advertisement[]; total: number }> {
+  async findAll(
+    dto: GetAdvertisementsDto,
+  ): Promise<{ data: Advertisement[]; total: number }> {
     const page = dto.page ?? 1;
     const limit = dto.limit ?? 10;
     const skip = (page - 1) * limit;
 
-    const query = this.adRepository.createQueryBuilder('ad')
+    const query = this.adRepository
+      .createQueryBuilder('ad')
       .leftJoinAndSelect('ad.user', 'user')
       .where('ad.isActive = :isActive', { isActive: true })
       .orderBy('ad.createdAt', 'DESC');
 
     if (dto.categoryId) {
-      query.andWhere('ad.categoryId = :categoryId', { categoryId: dto.categoryId });
+      query.andWhere('ad.categoryId = :categoryId', {
+        categoryId: dto.categoryId,
+      });
     }
 
     if (dto.q) {
@@ -133,7 +160,7 @@ export class AdvertisementsService {
   async findOne(id: number): Promise<Advertisement> {
     const ad = await this.adRepository.findOne({
       where: { id },
-      relations: { user: true }
+      relations: { user: true },
     });
     if (!ad) {
       throw new NotFoundException(`Advertisement with ID ${id} not found.`);
@@ -141,14 +168,26 @@ export class AdvertisementsService {
     return ad;
   }
 
-  async update(id: number, dto: UpdateAdDto, userId: number, files?: Express.Multer.File[], isAdminOverride = false): Promise<Advertisement> {
+  async update(
+    id: number,
+    dto: UpdateAdDto,
+    userId: number,
+    files?: Express.Multer.File[],
+    isAdminOverride = false,
+  ): Promise<Advertisement> {
     const ad = await this.findOne(id);
     this.verifyOwnership(ad, userId, isAdminOverride);
 
-    if (dto.categoryId !== undefined && dto.categoryId !== null && dto.categoryId !== ad.categoryId) {
+    if (
+      dto.categoryId !== undefined &&
+      dto.categoryId !== null &&
+      dto.categoryId !== ad.categoryId
+    ) {
       const category = await this.categoriesService.findById(dto.categoryId);
       if (!category.isActive) {
-        throw new BadRequestException('Advertisements cannot be placed under inactive categories.');
+        throw new BadRequestException(
+          'Advertisements cannot be placed under inactive categories.',
+        );
       }
       ad.categoryId = dto.categoryId;
     }
@@ -162,7 +201,7 @@ export class AdvertisementsService {
     if (dto.price !== undefined) ad.price = dto.price;
     if (dto.isActive !== undefined) ad.isActive = dto.isActive;
 
-    let imageUrls: string[] = dto.images || ad.images || [];
+    const imageUrls: string[] = dto.images || ad.images || [];
 
     if (files && files.length > 0) {
       const uploadDir = path.join(process.cwd(), 'public', 'uploads');
@@ -177,7 +216,9 @@ export class AdvertisementsService {
         const filePath = path.join(uploadDir, filename);
 
         await fs.promises.writeFile(filePath, file.buffer);
-        const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3000}`;
+        const baseUrl =
+          process.env.BACKEND_URL ||
+          `http://localhost:${process.env.PORT || 3000}`;
         imageUrls.push(`${baseUrl}/uploads/${filename}`);
       }
     }
@@ -199,10 +240,14 @@ export class AdvertisementsService {
       }
 
       const isOwner = ad.userId === user.sub;
-      const isAdmin = user.role === UserRole.ADMIN && user.approvalStatus === ApprovalStatus.APPROVED;
+      const isAdmin =
+        user.role === UserRole.ADMIN &&
+        user.approvalStatus === ApprovalStatus.APPROVED;
 
       if (!isOwner && !isAdmin) {
-        throw new ForbiddenException('You do not have permission to delete this advertisement.');
+        throw new ForbiddenException(
+          'You do not have permission to delete this advertisement.',
+        );
       }
 
       const archive = manager.create(AdvertisementArchive, {
@@ -224,7 +269,9 @@ export class AdvertisementsService {
         await manager.remove(ad);
       } catch (error) {
         this.logger.error(`Failed to archive advertisement ID ${id}`, error);
-        throw new InternalServerErrorException('An error occurred while archiving the advertisement.');
+        throw new InternalServerErrorException(
+          'An error occurred while archiving the advertisement.',
+        );
       }
     });
   }

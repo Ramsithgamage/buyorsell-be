@@ -1,10 +1,10 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateApiLogsTable1783580000000 implements MigrationInterface {
-    name = 'CreateApiLogsTable1783580000000'
+  name = 'CreateApiLogsTable1783580000000';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             CREATE TABLE \`api_logs\` (
                 \`id\` varchar(36) NOT NULL,
                 \`method\` varchar(10) NOT NULL,
@@ -21,9 +21,9 @@ export class CreateApiLogsTable1783580000000 implements MigrationInterface {
                 PRIMARY KEY (\`id\`)
             ) ENGINE=InnoDB
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP TABLE \`api_logs\``);
-    }
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP TABLE \`api_logs\``);
+  }
 }

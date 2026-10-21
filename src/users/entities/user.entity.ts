@@ -77,6 +77,8 @@ export class User {
   })
   approvalStatus!: ApprovalStatus;
 
-  @OneToOne(() => VendorProfile, (vendorProfile) => vendorProfile.user, { cascade: true })
+  @OneToOne(() => VendorProfile, (vendorProfile) => vendorProfile.user, {
+    cascade: true,
+  })
   vendorProfile?: VendorProfile;
 }

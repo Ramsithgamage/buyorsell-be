@@ -88,7 +88,7 @@ const CATEGORIES_DATA = [
       'Sports Supplements',
       'Art & Collectibles',
       'Music, Books & Movies',
-      'Children\'s Items',
+      "Children's Items",
       'Other Hobby, Sport & Kids Items',
     ],
   },
@@ -134,7 +134,9 @@ async function seed() {
       const parentSlug = slugify(parentName, { lower: true, strict: true });
 
       // 1. Check or insert parent category
-      let parent = await categoryRepository.findOne({ where: { slug: parentSlug } });
+      let parent = await categoryRepository.findOne({
+        where: { slug: parentSlug },
+      });
       if (!parent) {
         parent = categoryRepository.create({
           name: parentName,
@@ -151,7 +153,9 @@ async function seed() {
       // 2. Check or insert child categories
       for (const childName of group.children) {
         const childSlug = slugify(childName, { lower: true, strict: true });
-        let child = await categoryRepository.findOne({ where: { slug: childSlug } });
+        let child = await categoryRepository.findOne({
+          where: { slug: childSlug },
+        });
         if (!child) {
           child = categoryRepository.create({
             name: childName,
@@ -160,13 +164,17 @@ async function seed() {
             parentId: parent.id,
           });
           await categoryRepository.save(child);
-          console.log(`  Created child category: ${childName} (under ${parentName})`);
+          console.log(
+            `  Created child category: ${childName} (under ${parentName})`,
+          );
         } else {
           // Update parent relationship if it's not set
           if (child.parentId !== parent.id) {
             child.parentId = parent.id;
             await categoryRepository.save(child);
-            console.log(`  Updated parent of category ${childName} to ${parentName}`);
+            console.log(
+              `  Updated parent of category ${childName} to ${parentName}`,
+            );
           } else {
             console.log(`  Child category already exists: ${childName}`);
           }
