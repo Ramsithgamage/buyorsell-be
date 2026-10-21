@@ -130,7 +130,7 @@ describe('AdvertisementsController', () => {
 
       const result = await controller.update(1, dto, user, []);
       expect(result.title).toBe('Updated Ad');
-      expect(service.update).toHaveBeenCalledWith(1, dto, 1, []);
+      expect(service.update).toHaveBeenCalledWith(1, dto, 1, [], false);
       expect(cacheManager.clear).toHaveBeenCalled();
     });
   });

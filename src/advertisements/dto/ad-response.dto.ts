@@ -11,6 +11,20 @@ export class AdUserDto {
   lastName!: string;
 }
 
+export class AdCategoryDto {
+  @ApiProperty({ example: 3 })
+  @Expose()
+  id!: number;
+
+  @ApiProperty({ example: 'Electronics' })
+  @Expose()
+  name!: string;
+
+  @ApiProperty({ example: 'electronics' })
+  @Expose()
+  slug!: string;
+}
+
 export class AdResponseDto {
   @ApiProperty({ example: 1 })
   @Expose()
@@ -60,4 +74,9 @@ export class AdResponseDto {
   @Expose()
   @Type(() => AdUserDto)
   user?: AdUserDto;
+
+  @ApiProperty({ type: AdCategoryDto, required: false })
+  @Expose()
+  @Type(() => AdCategoryDto)
+  category?: AdCategoryDto;
 }

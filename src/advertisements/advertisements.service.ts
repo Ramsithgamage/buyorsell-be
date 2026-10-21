@@ -138,6 +138,7 @@ export class AdvertisementsService {
     const query = this.adRepository
       .createQueryBuilder('ad')
       .leftJoinAndSelect('ad.user', 'user')
+      .leftJoinAndSelect('ad.category', 'category')
       .where('ad.isActive = :isActive', { isActive: true })
       .orderBy('ad.createdAt', 'DESC');
 
@@ -160,7 +161,7 @@ export class AdvertisementsService {
   async findOne(id: number): Promise<Advertisement> {
     const ad = await this.adRepository.findOne({
       where: { id },
-      relations: { user: true },
+      relations: { user: true, category: true },
     });
     if (!ad) {
       throw new NotFoundException(`Advertisement with ID ${id} not found.`);

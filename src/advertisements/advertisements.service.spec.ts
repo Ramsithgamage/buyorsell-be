@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import {
   NotFoundException,
   ForbiddenException,
@@ -19,6 +19,8 @@ describe('AdvertisementsService', () => {
   let adRepository: jest.Mocked<Repository<Advertisement>>;
   let categoriesService: jest.Mocked<CategoriesService>;
 
+  let mockManager: any;
+
   const mockAdRepository = () => ({
     create: jest.fn(),
     save: jest.fn(),
@@ -31,7 +33,18 @@ describe('AdvertisementsService', () => {
     findById: jest.fn(),
   });
 
+  const mockDataSource = () => ({
+    transaction: jest.fn((cb) => cb(mockManager)),
+  });
+
   beforeEach(async () => {
+    mockManager = {
+      findOne: jest.fn(),
+      create: jest.fn().mockImplementation((_, val) => val),
+      save: jest.fn(),
+      remove: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AdvertisementsService,
@@ -42,6 +55,10 @@ describe('AdvertisementsService', () => {
         {
           provide: CategoriesService,
           useFactory: mockCategoriesService,
+        },
+        {
+          provide: DataSource,
+          useFactory: mockDataSource,
         },
       ],
     }).compile();
@@ -154,18 +171,18 @@ describe('AdvertisementsService', () => {
   describe('remove', () => {
     it('should remove an advertisement if user owns it', async () => {
       const mockAd = { id: 1, userId: 1 } as Advertisement;
-      adRepository.findOne.mockResolvedValue(mockAd);
-      adRepository.remove.mockResolvedValue(mockAd);
+      mockManager.findOne.mockResolvedValue(mockAd);
+      mockManager.remove.mockResolvedValue(mockAd);
 
       await expect(
         service.remove(1, { sub: 1, type: 'access' }),
       ).resolves.not.toThrow();
-      expect(adRepository.remove).toHaveBeenCalledWith(mockAd);
+      expect(mockManager.remove).toHaveBeenCalledWith(mockAd);
     });
 
     it('should throw ForbiddenException if user does not own the advertisement', async () => {
       const mockAd = { id: 1, userId: 2 } as Advertisement;
-      adRepository.findOne.mockResolvedValue(mockAd);
+      mockManager.findOne.mockResolvedValue(mockAd);
 
       await expect(
         service.remove(1, { sub: 1, type: 'access' }),
@@ -174,8 +191,8 @@ describe('AdvertisementsService', () => {
 
     it('should remove an advertisement if user is an approved admin', async () => {
       const mockAd = { id: 1, userId: 2 } as Advertisement;
-      adRepository.findOne.mockResolvedValue(mockAd);
-      adRepository.remove.mockResolvedValue(mockAd);
+      mockManager.findOne.mockResolvedValue(mockAd);
+      mockManager.remove.mockResolvedValue(mockAd);
 
       await expect(
         service.remove(1, {
@@ -185,7 +202,7 @@ describe('AdvertisementsService', () => {
           approvalStatus: ApprovalStatus.APPROVED,
         }),
       ).resolves.not.toThrow();
-      expect(adRepository.remove).toHaveBeenCalledWith(mockAd);
+      expect(mockManager.remove).toHaveBeenCalledWith(mockAd);
     });
   });
 
