@@ -9,6 +9,7 @@ import { Advertisement } from '../advertisements/entities/advertisement.entity';
 import { AdvertisementArchive } from '../advertisements/entities/advertisement-archive.entity';
 import { ApiLog } from '../api-log/entities/api-log.entity';
 import { PromotionalAd } from '../promotional-ads/entities/promotional-ad.entity';
+import { Order } from '../orders/entities/order.entity';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ export const AppDataSource = new DataSource({
     AdvertisementArchive,
     ApiLog,
     PromotionalAd,
+    Order,
   ],
   migrations: [__dirname + '/migrations/*.ts'],
   synchronize: false,
