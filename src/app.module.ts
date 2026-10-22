@@ -16,6 +16,7 @@ import { AdvertisementsModule } from './advertisements/advertisements.module';
 import { ApiLogModule } from './api-log/api-log.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PromotionalAdsModule } from './promotional-ads/promotional-ads.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { PromotionalAdsModule } from './promotional-ads/promotional-ads.module';
     ApiLogModule,
     DashboardModule,
     PromotionalAdsModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
