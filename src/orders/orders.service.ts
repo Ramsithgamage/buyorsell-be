@@ -15,6 +15,8 @@ import { OrderStatus } from '../common/enums/order-status.enum';
 import { PaginatedOrderResponseDto } from './dto/order-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { OrderResponseDto } from './dto/order-response.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../common/enums/notification-type.enum';
 
 @Injectable()
 export class OrdersService {
@@ -25,6 +27,7 @@ export class OrdersService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(Advertisement)
     private readonly adRepository: Repository<Advertisement>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   // ── Create ────────────────────────────────────────────────────────────────
@@ -59,11 +62,20 @@ export class OrdersService {
     const saved = await this.orderRepository.save(order);
 
     // Return with relations for the response DTO
-    return plainToInstance(
-      OrderResponseDto,
-      await this.findOneOrFail(saved.id),
-      { excludeExtraneousValues: true },
+    const full = await this.findOneOrFail(saved.id);
+
+    // Notify the seller that a new order has arrived
+    void this.notificationsService.createNotification(
+      full.sellerId,
+      NotificationType.ORDER_PLACED,
+      'New Order Received',
+      `${full.buyer.firstName} ${full.buyer.lastName} placed an order for "${full.ad.title}".`,
+      full.id,
     );
+
+    return plainToInstance(OrderResponseDto, full, {
+      excludeExtraneousValues: true,
+    });
   }
 
   // ── Find received (seller view) ───────────────────────────────────────────
@@ -101,11 +113,20 @@ export class OrdersService {
     order.status = OrderStatus.SHIPPED;
     await this.orderRepository.save(order);
 
-    return plainToInstance(
-      OrderResponseDto,
-      await this.findOneOrFail(orderId),
-      { excludeExtraneousValues: true },
+    const shipped = await this.findOneOrFail(orderId);
+
+    // Notify the buyer that their order is on its way
+    void this.notificationsService.createNotification(
+      shipped.buyerId,
+      NotificationType.ORDER_SHIPPED,
+      'Order Shipped',
+      `Your order for "${shipped.ad.title}" has been shipped!`,
+      shipped.id,
     );
+
+    return plainToInstance(OrderResponseDto, shipped, {
+      excludeExtraneousValues: true,
+    });
   }
 
   // ── Cancel ────────────────────────────────────────────────────────────────
@@ -125,11 +146,20 @@ export class OrdersService {
     order.status = OrderStatus.CANCELLED;
     await this.orderRepository.save(order);
 
-    return plainToInstance(
-      OrderResponseDto,
-      await this.findOneOrFail(orderId),
-      { excludeExtraneousValues: true },
+    const cancelled = await this.findOneOrFail(orderId);
+
+    // Notify the seller that the buyer has cancelled
+    void this.notificationsService.createNotification(
+      cancelled.sellerId,
+      NotificationType.ORDER_CANCELLED,
+      'Order Cancelled',
+      `${cancelled.buyer.firstName} ${cancelled.buyer.lastName} cancelled their order for "${cancelled.ad.title}".`,
+      cancelled.id,
     );
+
+    return plainToInstance(OrderResponseDto, cancelled, {
+      excludeExtraneousValues: true,
+    });
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────

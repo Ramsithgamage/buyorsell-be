@@ -17,6 +17,7 @@ import { ApiLogModule } from './api-log/api-log.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { PromotionalAdsModule } from './promotional-ads/promotional-ads.module';
 import { OrdersModule } from './orders/orders.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { OrdersModule } from './orders/orders.module';
     DashboardModule,
     PromotionalAdsModule,
     OrdersModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
