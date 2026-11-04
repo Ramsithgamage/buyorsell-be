@@ -5,8 +5,9 @@ import {
   Max,
   IsPositive,
   IsString,
+  MaxLength,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class GetAdvertisementsDto {
@@ -34,6 +35,8 @@ export class GetAdvertisementsDto {
 
   @ApiProperty({ example: 'iphone', required: false })
   @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
+  @MaxLength(100)
   q?: string;
 }

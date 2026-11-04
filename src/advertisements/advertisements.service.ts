@@ -10,7 +10,7 @@ import {
 import * as fs from 'fs';
 import * as path from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, Brackets } from 'typeorm';
 import slugify from 'slugify';
 import { Advertisement } from './entities/advertisement.entity';
 import { AdvertisementArchive } from './entities/advertisement-archive.entity';
@@ -143,14 +143,31 @@ export class AdvertisementsService {
       .orderBy('ad.createdAt', 'DESC');
 
     if (dto.categoryId) {
-      query.andWhere('ad.categoryId = :categoryId', {
-        categoryId: dto.categoryId,
-      });
+      // Include ads posted under any sub-category of the selected category
+      const categoryIds =
+        await this.categoriesService.findSelfAndDescendantIds(dto.categoryId);
+      query.andWhere('ad.categoryId IN (:...categoryIds)', { categoryIds });
     }
 
-    if (dto.q) {
-      query.andWhere('ad.title LIKE :q', { q: `%${dto.q}%` });
-    }
+    const terms = (dto.q ?? '')
+      .trim()
+      .split(/\s+/)
+      .filter((t) => t.length > 0)
+      .slice(0, 10);
+
+    // Every search word must match the title, description or category name
+    terms.forEach((term, i) => {
+      const param = `term${i}`;
+      const escaped = term.replace(/[\\%_]/g, (c) => `\\${c}`);
+      query.andWhere(
+        new Brackets((qb) => {
+          qb.where(`ad.title LIKE :${param}`)
+            .orWhere(`ad.description LIKE :${param}`)
+            .orWhere(`category.name LIKE :${param}`);
+        }),
+        { [param]: `%${escaped}%` },
+      );
+    });
 
     query.skip(skip).take(limit);
 

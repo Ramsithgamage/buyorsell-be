@@ -88,6 +88,23 @@ describe('AdvertisementsController', () => {
         expect.any(Object),
       );
     });
+
+    it('should include the search term in the cache key', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      service.findAll.mockResolvedValue({ data: [], total: 0 });
+
+      const query: GetAdvertisementsDto = {
+        page: 1,
+        limit: 10,
+        categoryId: 3,
+        q: '  iPhone   13 ',
+      };
+      await controller.findAll(query);
+      expect(cacheManager.get).toHaveBeenCalledWith(
+        'advertisements_list_cat_3_q_iphone%2013_p_1_l_10',
+      );
+      expect(service.findAll).toHaveBeenCalledWith(query);
+    });
   });
 
   describe('create', () => {

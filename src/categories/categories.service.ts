@@ -223,6 +223,38 @@ export class CategoriesService {
   }
 
   /**
+   * Returns the given category ID plus the IDs of all its descendants
+   * (sub-categories at any depth) using a single query.
+   * Used to make filtering by a parent category include ads in its sub-categories.
+   */
+  async findSelfAndDescendantIds(categoryId: number): Promise<number[]> {
+    const all = await this.categoryRepository.find({
+      select: { id: true, parentId: true },
+    });
+
+    const childrenByParent = new Map<number, number[]>();
+    for (const cat of all) {
+      if (cat.parentId === null || cat.parentId === undefined) continue;
+      const list = childrenByParent.get(cat.parentId) ?? [];
+      list.push(cat.id);
+      childrenByParent.set(cat.parentId, list);
+    }
+
+    const result = new Set<number>([categoryId]);
+    const queue = [categoryId];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      for (const childId of childrenByParent.get(current) ?? []) {
+        if (!result.has(childId)) {
+          result.add(childId);
+          queue.push(childId);
+        }
+      }
+    }
+    return [...result];
+  }
+
+  /**
    * Fetches all categories and constructs a hierarchical tree
    */
   async findTrees(onlyActive = false): Promise<Category[]> {

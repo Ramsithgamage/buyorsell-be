@@ -55,7 +55,11 @@ export class AdvertisementsController {
 
   private getCacheKey(query: GetAdvertisementsDto): string {
     const catPart = query.categoryId ? `_cat_${query.categoryId}` : '';
-    return `${this.CACHE_PREFIX}${catPart}_p_${query.page ?? 1}_l_${query.limit ?? 10}`;
+    // The search term MUST be part of the key, otherwise a cached unfiltered
+    // list is returned for every search.
+    const normalizedQ = (query.q ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const qPart = normalizedQ ? `_q_${encodeURIComponent(normalizedQ)}` : '';
+    return `${this.CACHE_PREFIX}${catPart}${qPart}_p_${query.page ?? 1}_l_${query.limit ?? 10}`;
   }
 
   private async evictCache(): Promise<void> {
