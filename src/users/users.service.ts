@@ -32,6 +32,13 @@ export class UsersService {
     });
   }
 
+  async findByIdWithVendorProfile(id: number) {
+    return this.userRepository.findOne({
+      where: { id },
+      relations: { vendorProfile: true },
+    });
+  }
+
   async create(userData: Partial<User>) {
     const user = this.userRepository.create(userData);
 

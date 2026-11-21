@@ -36,4 +36,36 @@ export class UserResponseDto {
     description: 'Approval status of the user (PENDING, APPROVED, REJECTED)',
   })
   approvalStatus!: string;
+
+  @ApiProperty({
+    required: false,
+    example: 'http://localhost:3000/uploads/avatars/abc.jpg',
+    description: 'Profile picture URL, null if none set',
+    nullable: true,
+    type: String,
+  })
+  avatarUrl?: string | null;
+
+  @ApiProperty({
+    required: false,
+    example: '2026-01-01T00:00:00.000Z',
+    description: 'Account creation timestamp',
+  })
+  createdAt?: Date;
+
+  @ApiProperty({
+    required: false,
+    description: 'Vendor business details (VENDOR role only)',
+    type: () => VendorProfileResponseDto,
+    nullable: true,
+  })
+  vendorProfile?: VendorProfileResponseDto | null;
+}
+
+export class VendorProfileResponseDto {
+  @ApiProperty({ example: 'Acme Traders' })
+  companyName!: string;
+
+  @ApiProperty({ example: 'BRN-123456' })
+  businessRegistrationNumber!: string;
 }

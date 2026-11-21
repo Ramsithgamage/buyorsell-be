@@ -52,6 +52,14 @@ export class User {
   })
   refreshToken?: string;
 
+  @Column({
+    name: 'avatar_url',
+    type: 'varchar',
+    nullable: true,
+    length: 500,
+  })
+  avatarUrl?: string | null;
+
   @CreateDateColumn({
     name: 'created_at',
   })

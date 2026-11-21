@@ -59,7 +59,9 @@ export class AppController {
     description: 'Missing or invalid JWT access token',
   })
   async profile(@CurrentUser() user: JwtPayload): Promise<UserResponseDto> {
-    const userEntity = await this.usersService.findById(user.sub!);
+    const userEntity = await this.usersService.findByIdWithVendorProfile(
+      user.sub!,
+    );
     if (!userEntity) {
       throw new UserNotFoundException();
     }
@@ -70,6 +72,15 @@ export class AppController {
       email: userEntity.email,
       role: userEntity.role,
       approvalStatus: userEntity.approvalStatus,
+      avatarUrl: userEntity.avatarUrl ?? null,
+      createdAt: userEntity.createdAt,
+      vendorProfile: userEntity.vendorProfile
+        ? {
+            companyName: userEntity.vendorProfile.companyName,
+            businessRegistrationNumber:
+              userEntity.vendorProfile.businessRegistrationNumber,
+          }
+        : null,
     };
   }
 }
