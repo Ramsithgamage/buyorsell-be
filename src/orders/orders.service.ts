@@ -168,6 +168,8 @@ export class OrdersService {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: { ad: true, buyer: true, seller: true },
+      // Keep orders readable after a party deletes their (anonymized) account.
+      withDeleted: true,
     });
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} not found.`);
@@ -188,6 +190,7 @@ export class OrdersService {
       .leftJoinAndSelect('order.ad', 'ad')
       .leftJoinAndSelect('order.buyer', 'buyer')
       .leftJoinAndSelect('order.seller', 'seller')
+      .withDeleted()
       .orderBy('order.createdAt', 'DESC');
 
     if (filter.sellerId !== undefined) {

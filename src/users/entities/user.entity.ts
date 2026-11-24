@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   Index,
   OneToOne,
 } from 'typeorm';
@@ -69,6 +70,10 @@ export class User {
     name: 'updated_at',
   })
   updatedAt!: Date;
+
+  /** Set on account deletion; TypeORM excludes such rows from find*() by default. */
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date | null;
 
   @Column({
     type: 'varchar',

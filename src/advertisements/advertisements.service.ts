@@ -179,6 +179,7 @@ export class AdvertisementsService {
     const ad = await this.adRepository.findOne({
       where: { id },
       relations: { user: true, category: true },
+      withDeleted: true,
     });
     if (!ad) {
       throw new NotFoundException(`Advertisement with ID ${id} not found.`);

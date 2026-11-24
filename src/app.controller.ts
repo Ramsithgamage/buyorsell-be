@@ -1,19 +1,7 @@
-import { Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 import { AuthService } from './auth/auth.service';
-import { UsersService } from './users/users.service';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { CurrentUser } from './auth/decorators/current-user.decorator';
-import type { JwtPayload } from './auth/interfaces/jwt-payload.interface';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
-import { UserResponseDto } from './users/dto/user-response.dto';
-import { ErrorResponseDto } from './common/dto/error-response.dto';
-import { UserNotFoundException } from './common/exceptions';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Core')
 @Controller()
@@ -21,7 +9,6 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly authService: AuthService,
-    private readonly usersService: UsersService,
   ) {}
 
   @Get()
@@ -44,43 +31,5 @@ export class AppController {
     return this.authService.getGuestToken();
   }
 
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get profile details of the authenticated user' })
-  @ApiResponse({
-    status: 200,
-    type: UserResponseDto,
-    description: 'Authenticated user details returned successfully',
-  })
-  @ApiResponse({
-    status: 401,
-    type: ErrorResponseDto,
-    description: 'Missing or invalid JWT access token',
-  })
-  async profile(@CurrentUser() user: JwtPayload): Promise<UserResponseDto> {
-    const userEntity = await this.usersService.findByIdWithVendorProfile(
-      user.sub!,
-    );
-    if (!userEntity) {
-      throw new UserNotFoundException();
-    }
-    return {
-      id: userEntity.id,
-      firstName: userEntity.firstName,
-      lastName: userEntity.lastName,
-      email: userEntity.email,
-      role: userEntity.role,
-      approvalStatus: userEntity.approvalStatus,
-      avatarUrl: userEntity.avatarUrl ?? null,
-      createdAt: userEntity.createdAt,
-      vendorProfile: userEntity.vendorProfile
-        ? {
-            companyName: userEntity.vendorProfile.companyName,
-            businessRegistrationNumber:
-              userEntity.vendorProfile.businessRegistrationNumber,
-          }
-        : null,
-    };
-  }
+  // GET /profile now lives in UsersModule → ProfileController.
 }

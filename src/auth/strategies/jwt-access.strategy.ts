@@ -5,10 +5,14 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { UsersService } from '../../users/users.service';
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private readonly usersService: UsersService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 
@@ -24,6 +28,11 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt') {
     }
     if (payload.type !== 'access') {
       throw new UnauthorizedException('Access token is required');
+    }
+    // Soft-deleted users are excluded by TypeORM, so their tokens stop working immediately.
+    const user = await this.usersService.findById(payload.sub);
+    if (!user) {
+      throw new UnauthorizedException('Invalid or expired session');
     }
     return payload;
   }
