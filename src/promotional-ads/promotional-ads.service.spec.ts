@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import * as fs from 'fs';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
@@ -26,6 +27,9 @@ describe('PromotionalAdsService', () => {
   });
 
   beforeEach(async () => {
+    // Never write to the real public/uploads folder from unit tests.
+    jest.spyOn(fs.promises, 'writeFile').mockResolvedValue();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PromotionalAdsService,
