@@ -11,6 +11,7 @@ import { ApiLog } from '../api-log/entities/api-log.entity';
 import { PromotionalAd } from '../promotional-ads/entities/promotional-ad.entity';
 import { Order } from '../orders/entities/order.entity';
 import { Notification } from '../notifications/entities/notification.entity';
+import { WishlistItem } from '../wishlist/entities/wishlist-item.entity';
 
 dotenv.config();
 
@@ -39,7 +40,9 @@ export const AppDataSource = new DataSource({
     PromotionalAd,
     Order,
     Notification,
+    WishlistItem,
   ],
   migrations: [__dirname + '/migrations/*.ts'],
   synchronize: false,
+  timezone: 'Z',
 });

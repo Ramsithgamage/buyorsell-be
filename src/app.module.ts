@@ -18,6 +18,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { PromotionalAdsModule } from './promotional-ads/promotional-ads.module';
 import { OrdersModule } from './orders/orders.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { WishlistModule } from './wishlist/wishlist.module';
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { NotificationsModule } from './notifications/notifications.module';
             : false,
         autoLoadEntities: true,
         synchronize: false,
+        timezone: 'Z',
       }),
     }),
 
@@ -93,6 +95,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     PromotionalAdsModule,
     OrdersModule,
     NotificationsModule,
+    WishlistModule,
   ],
   controllers: [AppController],
   providers: [AppService],
