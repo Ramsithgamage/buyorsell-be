@@ -26,6 +26,7 @@ import type { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { NotificationType } from '../common/enums/notification-type.enum';
 import { NotificationsService } from './notifications.service';
 import { SseService } from './sse.service';
 import {
@@ -92,12 +93,14 @@ export class NotificationsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get paginated notifications for the current user' })
   @ApiQuery({ name: 'unread', required: false, type: Boolean })
+  @ApiQuery({ name: 'type', required: false, enum: NotificationType })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, type: PaginatedNotificationResponseDto })
   async findAll(
     @CurrentUser() user: JwtPayload,
     @Query('unread') unread?: string,
+    @Query('type') type?: NotificationType,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
   ): Promise<PaginatedNotificationResponseDto> {
@@ -106,6 +109,7 @@ export class NotificationsController {
       unread === 'true',
       Math.max(1, parseInt(page, 10) || 1),
       Math.min(50, Math.max(1, parseInt(limit, 10) || 20)),
+      type,
     );
   }
 

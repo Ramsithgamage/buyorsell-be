@@ -73,9 +73,16 @@ export class NotificationsService {
     unreadOnly: boolean,
     page: number,
     limit: number,
+    type?: NotificationType,
   ): Promise<PaginatedNotificationResponseDto> {
     const where: Record<string, unknown> = { userId };
     if (unreadOnly) where['readAt'] = IsNull();
+    if (
+      type &&
+      Object.values(NotificationType).includes(type as NotificationType)
+    ) {
+      where['type'] = type;
+    }
 
     const [data, totalItems] = await this.notificationRepository.findAndCount({
       where,
